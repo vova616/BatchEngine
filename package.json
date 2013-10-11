@@ -1,0 +1,27 @@
+{
+	"name": "endine",
+	"description": "An example project skeleton",
+	"homepage": "http://example.org",
+	"copyright": "Copyright © 2000, Your Name",
+	"authors": [
+		"Your Name"
+	],
+	"dependencies": {
+		"gl3n": "~master",
+		"derelict-fi": "~master",
+		"derelict-gl3": "~master",
+		"derelict-glfw3": "~master",
+		"derelict-ft": "~master",
+	},
+	"configurations": [
+		{
+			"name": "application",
+			"targetType": "executable",
+		},
+		{
+			"name": "llvm",
+			"targetType": "executable",
+			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops","-m32","-gc"],
+		},
+	]
+}

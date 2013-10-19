@@ -14,14 +14,69 @@ import std.variant;
 Shader shader;
 Camera camera; 
 
+class System {
+	abstract void start();
+	abstract void process();
+}
+
+struct Position {
+	vec3 position;
+	
+	alias position this;
+}
+
+struct Position2 {
+	vec3 position;
+
+	alias position this;
+}
+
+
+class CEntity {
+	Variant[] Components;
+}
+
+template CSystem(C...) {
+	class CSystem {
+		
+		bool check(CEntity e) {
+			Continue:
+			foreach(i, c ;C) {
+				foreach(c2 ;e.Components) {
+					if (typeid(c) == c2.type()) {
+						continue Continue;
+					}
+				}
+				return false;
+			}			
+			return true;
+		}
+
+		abstract void start();
+		abstract void process();
+	}
+}
+
+class MovementSystem : CSystem!(Position*) {
+	
+	override void start() {
+		
+	}
+
+	override void process() {
+
+	}
+}
+
+
 class GravityMouse : Component {
 	
 	 vec3 v = vec3(0,0,0);
 	 static float force = 1000;
 
 	 override void Update() {
-		 auto pos = vec3(Input.MousePosition(),0);
-		 pos.y = Core.height - pos.y;
+		 auto pos = vec3(Core.camera.MouseWorldPosition(),0);
+		
 
 		
 		// 
@@ -32,11 +87,11 @@ class GravityMouse : Component {
 		 dir.normalize();
 		 if (dis > force/10) {
 			 v += dir * (force / dis) * 6.674;
-			 v.z = 0.01;
+			 //v.z = 0.01;
 		 } else {
 			 v += dir * 10 * 6.674;
-			 v.z = 0.01;
-		 }
+			 //v.z = 0.01;
+		 }	
 		 transform.Position += v  * cast(float)Core.DeltaTime;
 		 auto sprite = entity.sprite;
 		 auto v2 = v;
@@ -45,104 +100,81 @@ class GravityMouse : Component {
 
 		 if (sprite !is null) {
 			 sprite.color = vec4((v2.y+2*v2.x)/50, v2.x/50,v2.y/60,1);
-		 } else {
-			 transform.Rotation.z = atan2(v.x, v.y) * 180f/PI;
-		 }
+		 } //else {
+			// transform.Rotation.z = atan2(v.x, v.y) * 180f/PI;
 		// transform.Scale.x = (v2.x+v2.y)/20 + 5;
 		// transform.Scale.y = transform.Scale.x;
 	 }
 }
 
-class GameOfLife : Component {
-
-	static bool[] map ;
-	static bool stop = false;
-	static int width;
-	static int height;
-	int x,y;
-	bool* val;
-
-	override void Start() {
-		if (map is null) {
-			width = Core.width / 10;
-			height = Core.height / 10;
-			map = new bool[width*height];
-			StartCoroutine({
-				int ticks = 0;
-				while (true) {
-					while (stop)
-						Coroutine.yield();
-
-					while (ticks >= 30) {
-						ticks -= 30;
-						for (int y=0;y<Core.height;y++) {
-							for (int x=0;x<Core.width;x++) {
-								
-								int nibors = 0;
-
-								auto occ = Get(x,y);
-
-								if (Get(x+1,y)) nibors++;
-								if (Get(x-1,y)) nibors++;
-								if (Get(x,y+1)) nibors++;
-								if (Get(x,y-1)) nibors++;
-								if (Get(x+1,y+1)) nibors++;
-								if (Get(x+1,y-1)) nibors++;
-								if (Get(x-1,y+1)) nibors++;
-								if (Get(x-1,y-1)) nibors++;
-
-								if (occ) {
-									if (nibors <= 1 || nibors >= 4) {
-										Set(x,y, false);
-									}
-								} else {
-									if (nibors == 3) {
-										Set(x,y, true);
-									}
-								}
-							}
-						}
-					}
-					ticks++;
-					Coroutine.yield();
-				}
-			});
-		}
-
-		auto p = transform.Position;
-		x = cast(int)(p.x / 10);
-		y = cast(int)(p.y / 10);
-		if (x > 0 && x < width && y > 0 && y < height) {
-			val = &map[y*width + x];
-			*val = true;
-		} else {
-			entity.RemoveComponent!GameOfLife();
-		}
-	}
-
-	void Set()(int x,int y, bool val) {
-		map[y*width + x] = val; 
-	}
-
-	bool Get()(int x,int y) {
-		if (x < 0 || x >= width || y < 0 || y >= height) {
-			return false;
-		}
-		return map[y*width + x]; 
-	}
-
+class InputHandle : Component {
 	override void Update() {
-		if (*val) {
-			transform.Scale = vec3(10,10,10);
-		} else {
-			transform.Scale = vec3(0,0,0);
+		if (Input.KeyDown(Key.Q))  {
+			Core.camera.size += 0.5*Core.DeltaTime;
+			Core.camera.UpdateResolution();
+		}	
+		if (Input.KeyDown(Key.W)) {
+			Core.camera.size -= 0.5*Core.DeltaTime;
+			Core.camera.UpdateResolution();
+		}
+		if (Input.KeyDown(Key.A)) {
+			Core.camera.transform.Rotation.y -= Core.DeltaTime;
+		}
+		if (Input.KeyDown(Key.S)) {
+			Core.camera.transform.Rotation.y += Core.DeltaTime;
+		}
+		if (Input.KeyDown(Key.E)) {
+			GravityMouse.force += GravityMouse.force*Core.DeltaTime*2;
+		}	
+		if (Input.KeyDown(Key.R)) {
+			GravityMouse.force -= GravityMouse.force*Core.DeltaTime*2;
 		}
 	}
 }
 
-	
+
+struct dirty(T) {
+	bool dirty;
+	T val;
+
+	alias v this;	
+
+	@property const(T) v() {
+		return val;
+	}
+
+	void opOpAssign(R)(auto ref const R r) {
+		static if (__traits(compiles, val.opAssign!R(r))) {
+			dirty = true;
+			val.opOpAssign!R(r);	
+		}
+	}
+
+	void opAssign(R)(auto ref const R r) {
+		static if (__traits(compiles, val.opAssign!R(r))) {
+			val.opAssign!R(r);
+		} else {
+			val = r;
+		}
+		dirty = true;
+	}
+}
+
+class A {
+	dirty!(vec3) position;
+
+}
+
 void main(string[] args) {
-	
+	/*
+	A a = new A();
+	a.position = vec3(0,0,0);
+	a.position.dirty = false;
+	auto v = a.position.x;
+	writeln(a.position.dirty);
+	a.position.x = 10;
+	writeln(a.position.dirty);
+*/
 	try {
 		run();
 	}
@@ -155,12 +187,25 @@ void main(string[] args) {
 
 void run() {
 	// Prints "Hello World" string in console
-
-
+	{
+		auto r = mat4.identity.rotatex(0).rotatey(0).rotatez(0);
+		auto s = mat4.identity.scale(0.9, 0.9, 0.9);
+		auto t =  mat4.identity.translation(400, 400, 0);
+		auto m = t*r*s;
+		auto mi = m;
+		mi.invert();
+		writeln("\nRotate ",r, "\nScale ", s, "\nTranslate", t, "\nMatrix " , m , "\nInvert ", mi);
+	}
 	Core.Start();
 
 	
-
+		
+	auto ct = new CEntity();
+	ct.Components.length++;
+	ct.Components[0] = new Position(vec3(10,0,0));
+	auto d = new MovementSystem();
+	assert(d.check(ct));
+	d.start();
 	
 
 	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
@@ -185,7 +230,7 @@ void run() {
 	mmouse.transform.Scale = vec3(100, 100, 1);
 	
 			
-	for (int i=0;i<50000;i++) {
+	for (int i=0;i<10000;i++) {
 		auto ship = new Entity();
 		ship.AddComponent(new Sprite(shipTexture));
 		ship.AddComponent(new GravityMouse());
@@ -198,11 +243,11 @@ void run() {
 		ship.transform.Position = vec3((i*2)%Core.width,((i/Core.width)*10)%Core.height,0);
 		//ship.transform.Position += vec3(0,10000,0);
 		//ship.transform.Position = vec3(uniform(0,Core.width),uniform(0,Core.height),0);
-		ship.transform.Scale = vec3(32, 32, 1);
+		ship.transform.Scale = vec3(4, 4, 1);
 	}
 	
 	
-	for (int i=0;i<0;i++) {
+	for (int i=0;i<10;i++) {
 		auto e2 = new Entity();
 		e2.transform.Scale.x = 32;
 		e2.transform.Scale.y = 32;
@@ -223,6 +268,7 @@ void run() {
 
 	auto cam = new Entity();
 	camera = cam.AddComponent(new Camera());
+	cam.AddComponent(new InputHandle());
 	Core.AddEntity(cam);
 	Core.camera = cam.GetComponent!Camera();
 
@@ -252,31 +298,13 @@ void run() {
 				frames = 0;
 				
 			}
+			auto camRect = Core.camera.rect;
+			fps.entity.transform.Position = vec3(camRect.min.x + 10, camRect.max.y - 10,0);
+			fps.entity.transform.Scale = vec3(1,1,1)* Core.camera.size * 34;
 			auto pos = Input.MousePosition();
 			pos.y = Core.height - pos.y;
 			mmouse.transform.Position = vec3(pos,0);
-
-			if (Input.KeyPressDown(Key.S)) {
-				e3.transform.Position.y += 10;
-				fps.SetText(fps.text ~ "a");
-			}
-			if (Input.KeyPressDown(Key.A)) {
-				e3.transform.Position.y -= 10;
-				fps.SetText(fps.text[0..$-1]);
-			}
-			if (Input.KeyDown(Key.Q)) {
-				cam.transform.Scale += cam.transform.Scale()*(Core.DeltaTime*0.1f);
-			}	
-			if (Input.KeyDown(Key.W)) {
-				cam.transform.Scale -= cam.transform.Scale()*(Core.DeltaTime*0.1f);
-			}
-			if (Input.KeyDown(Key.E)) {
-				GravityMouse.force += GravityMouse.force*Core.DeltaTime*2;
-			}	
-			if (Input.KeyDown(Key.R)) {
-				GravityMouse.force -= GravityMouse.force*Core.DeltaTime*2;
-			}
-			
+		
 			Coroutine.yield();
 		}
 	});

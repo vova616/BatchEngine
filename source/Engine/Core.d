@@ -19,12 +19,12 @@ public class Core
 	public static GLFWwindow* window;
 	package static Entity[] entities;
 	package static Batch[] batches;
-	public __gshared static auto width = 800;
-	public __gshared static auto height = 600;
+	public shared static auto width = 800;
+	public shared static auto height = 600;
 	static Camera camera;
 	static Shader shader;
 
-	public __gshared static double DeltaTime;
+	public shared static double DeltaTime;
 
 	public static void AddEntity(Entity entity) {
 		entities ~= entity;

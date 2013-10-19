@@ -21,7 +21,7 @@
 		{
 			"name": "llvm",
 			"targetType": "executable",
-			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops","-m32","-gc"],
+			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops","-m32"],
 		},
 	]
 }

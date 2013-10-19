@@ -10,7 +10,11 @@ class Shader
 {
 	immutable GLuint Program;
 	package static GLuint currentProgram = -1;
-	const(Attribute[string]) Attributes;
+	Attribute[string] attributes;
+
+	@property const(Attribute[string]) Attributes() {
+		return attributes;
+	}
 
 	this(immutable string vertexShaderSource,immutable string fregmentShaderSource)
 	{
@@ -84,7 +88,7 @@ class Shader
 			glGetActiveAttrib(program,i,maxAttribLen,&len,&attribSize,&type,cast( char*)&message[0]);
 			message = message[0..len];
 			auto location = glGetAttribLocation(program, cast( char*)&message[0]);
-			Attributes[cast(string)(message)] = new Attribute(i,location,cast(string)(message),type);
+			this.attributes[cast(string)(message)] = new Attribute(i,location,cast(string)(message),type);
 		}
 
 		attribs = 0;
@@ -100,7 +104,7 @@ class Shader
 			glGetActiveUniform(program,i,maxAttribLen,&len,&attribSize,&type,cast( char*)&message[0]);
 			message = message[0..len];
 			auto location = glGetUniformLocation(program, cast( char*)&message[0]);
-			Attributes[cast(string)(message)] = new Attribute(i,location,cast(string)(message),type);
+			this.attributes[cast(string)(message)] = new Attribute(i,location,cast(string)(message),type);
 		}
 
 

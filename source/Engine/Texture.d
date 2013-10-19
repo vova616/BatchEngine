@@ -4,6 +4,7 @@ import Engine.Atlas;
 import derelict.freeimage.freeimage;
 import std.stdio;
 import derelict.opengl3.gl;
+import Engine.math;
 import Engine.Buffer;
 import Engine.Material;
 
@@ -16,7 +17,7 @@ struct UV {
 
 interface ITexture {
 	@property GLenum id();
-	@property Rect rect();
+	@property recti rect();
 	@property ubyte pixelSize();
 	@property GLenum format();
 
@@ -67,12 +68,12 @@ class DynamicTexture : Texture {
 
 class Texture : ITexture {
 	@property GLenum id() { return _id;};
-	@property Rect rect() { return _rect;};
+	@property recti rect() { return _rect;};
 	@property ubyte pixelSize() { return _pixelSize;};
 	@property GLenum format() { return _format; };
 
 	package GLenum _id;
-	package Rect _rect;
+	package recti _rect;
 	package ubyte _pixelSize;
 	package GLenum _format;
 
@@ -103,7 +104,7 @@ class Texture : ITexture {
 	}
 
 	this(ubyte[] buffer, int width, int height) {
-		this._rect = Rect(width,height);
+		this._rect = recti(width,height);
 		this._pixelSize = 2;
 		this._format = GL_RGBA;
 		//generate an OpenGL texture ID for this texture
@@ -118,7 +119,7 @@ class Texture : ITexture {
 	}
 
 	this(int width, int height) {
-		this._rect = Rect(width,height);
+		this._rect = recti(width,height);
 		this._pixelSize = 4*4;
 		this._format = GL_RGBA32F;
 		//generate an OpenGL texture ID for this texture
@@ -158,7 +159,7 @@ class Texture : ITexture {
 		auto width = FreeImage_GetWidth(dib);
 		auto height = FreeImage_GetHeight(dib);
 
-		_rect = Rect(width,height);
+		_rect = recti(width,height);
 
 		//if this somehow one of these failed (they shouldn't), return failure
 		if((pixels is null) || (width == 0) || (height == 0))
@@ -205,7 +206,7 @@ class Texture : ITexture {
 		SetFiltering(GL_NEAREST,GL_NEAREST);	
 	}
 
-	UV RectUV(Rect rect) {
+	UV RectUV(recti rect) {
 		auto w = cast(double)width;
 		auto h = cast(double)height;
 		return UV((cast(double)rect.min.x)/w,

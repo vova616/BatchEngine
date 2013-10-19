@@ -20,7 +20,7 @@ private static const final void _defaultRenderer(Batch batch) {
 	glBindBuffer(GL_ARRAY_BUFFER, batch.vertex);
 	glEnableVertexAttribArray(vertexAttrib.location);
 	glVertexAttribPointer(
-						  vertexAttrib.location,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  vertexAttrib.location,    // attribute    
 						  3,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?
@@ -30,7 +30,7 @@ private static const final void _defaultRenderer(Batch batch) {
 	glBindBuffer(GL_ARRAY_BUFFER, batch.uv);
 	glEnableVertexAttribArray(uvAttrib.location);
 	glVertexAttribPointer(
-						  uvAttrib.location,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  uvAttrib.location,       // attribute 
 						  2,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?
@@ -40,7 +40,7 @@ private static const final void _defaultRenderer(Batch batch) {
 	glBindBuffer(GL_ARRAY_BUFFER, batch.color);
 	glEnableVertexAttribArray(colorAttrib.location);
 	glVertexAttribPointer(
-						  colorAttrib.location,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  colorAttrib.location,        // attribute 
 						  4,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?
@@ -51,7 +51,7 @@ private static const final void _defaultRenderer(Batch batch) {
 	glBindBuffer(GL_ARRAY_BUFFER, batch.matrix);
 	glEnableVertexAttribArray(modelsAttrib.location);
 	glVertexAttribPointer(
-						  modelsAttrib.location,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  modelsAttrib.location,        // attribute 
 						  3,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?
@@ -60,7 +60,7 @@ private static const final void _defaultRenderer(Batch batch) {
 							  );	
 	glEnableVertexAttribArray(modelsAttrib.location+1);
 	glVertexAttribPointer(
-						  modelsAttrib.location+1,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  modelsAttrib.location+1,        // attribute 
 						  3,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?
@@ -69,7 +69,7 @@ private static const final void _defaultRenderer(Batch batch) {
 							  );
 	glEnableVertexAttribArray(modelsAttrib.location+2);
 	glVertexAttribPointer(
-						  modelsAttrib.location+2,        // attribute 0. No particular reason for 0, but must match the layout in the shader.
+						  modelsAttrib.location+2,        // attribute
 						  3,                  // size
 						  GL_FLOAT,           // type
 						  GL_FALSE,           // normalized?

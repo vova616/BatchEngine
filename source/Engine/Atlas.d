@@ -1,7 +1,7 @@
 module Engine.Atlas;
 
 
-import gl3n.linalg;
+import Engine.math;
 import std.math;
 import std.stdio;
 import Engine.Texture;
@@ -50,23 +50,23 @@ class MaxRectsBinPack {
 	int height;
 	int padding;
 
-	Rect[] freeRectangles;
-	Rect[] usedRectangles;
+	recti[] freeRectangles;
+	recti[] usedRectangles;
 
 	this(int width, int height, int padding) {
 		this.width = width;
 		this.height = height;
 		this.padding = padding;
-		freeRectangles ~= Rect(width,height);
+		freeRectangles ~= recti(width,height);
 	}
 
 	void Reset() {
 		freeRectangles.length = 1;
 		usedRectangles.length = 0;
-		freeRectangles[0] = Rect(width,height);
+		freeRectangles[0] = recti(width,height);
 	}
 
-	void placeRect(Rect r) {
+	void placeRect(recti r) {
 		for (auto i = 0; i < freeRectangles.length; i++) {
 			if (SplitFreeNode(freeRectangles[i], r)) {
 				freeRectangles[i] = freeRectangles[freeRectangles.length-1];
@@ -88,7 +88,7 @@ class MaxRectsBinPack {
 		return (cast(double)(usedSurfaceArea) / cast(double)(this.width*this.height));
 	}
 
-	bool Insert(Rect rect, out Rect result) {
+	bool Insert(recti rect, out recti result) {
 		int a,b;
 		auto r = this.FindPositionForNewNodeBestShortSideFit(rect.Dx()+this.padding, rect.Dy()+this.padding,a,b);
 		if (r.Dx() == 0) {
@@ -103,17 +103,17 @@ class MaxRectsBinPack {
 		return true;
 	}
 
-	Rect[] InsertArray(Rect[] rects)   {
-		auto r = new Rect[rects.length];
+	recti[] InsertArray(recti[] rects)   {
+		auto r = new recti[rects.length];
 		auto numRects = rects.length;
 		while (numRects != 0) {
 			auto bestScore1 = int.max;
 			auto bestScore2 = int.max;
 			auto bestRectIndex = -1;
-			Rect bestNode;
+			recti bestNode;
 
-			foreach (int i,ref Rect rect; rects) {
-				if (r[i] != Rect.Zero) {
+			foreach (int i,ref recti rect; rects) {
+				if (r[i] != recti.Zero) {
 					continue;
 				}	
 				int score1, score2;
@@ -180,10 +180,10 @@ class MaxRectsBinPack {
 		}
 	}
 
-	Rect FindPositionForNewNodeBestShortSideFit(int width,int height, out int bestShortSideFit, out int bestLongSideFit) {
+	recti FindPositionForNewNodeBestShortSideFit(int width,int height, out int bestShortSideFit, out int bestLongSideFit) {
 		bestShortSideFit = int.max;
 		bestLongSideFit = int.max;
-		Rect bestNode;
+		recti bestNode;
 		foreach (ref r; freeRectangles) {
 				auto rW = r.Dx();
 				auto rH = r.Dy();
@@ -222,7 +222,7 @@ class MaxRectsBinPack {
 		return bestNode;
 	}
 
-	bool SplitFreeNode(Rect freeNode,Rect usedNode )  {
+	bool SplitFreeNode(recti freeNode,recti usedNode )  {
 		// Test with SAT if the rectangles even intersect.
 		if (usedNode.min.x >= freeNode.max.x || usedNode.max.x <= freeNode.min.x ||
 			usedNode.min.y >= freeNode.max.y || usedNode.max.y <= freeNode.min.y) {
@@ -281,7 +281,7 @@ class MaxRectsBinPack {
 	/*
 	This needs to be smarter, but it does work great for images like fonts
 	*/
-	static vec2i FindOptimalSize(int tries ,Rect[] rects, int padding)  {
+	static vec2i FindOptimalSize(int tries ,recti[] rects, int padding)  {
 		long totalSize = 0;
 		foreach (ref rect; rects) {
 			totalSize += (rect.Dx() * rect.Dy());
@@ -314,38 +314,3 @@ class MaxRectsBinPack {
 	}
 }
 
-
-struct Rect {
-	vec2i min;
-	vec2i max;
-
-	static Rect Zero = Rect();
-
-
-	this(int width, int height) {
-		max = vec2i(width,height);
-	}
-	// Empty returns whether the rectangle contains no points.
-	nothrow pure bool Empty() const  {
-		return min.x >= max.x || min.y >= max.y;
-	}
-
-	nothrow pure int Dx() const  {
-		return max.x - min.x;
-	}
-	
-	nothrow pure int Dy() const  {
-		return max.y - min.y;
-	}
-	
-	nothrow pure bool In(Rect s) const   {
-		if (Empty()) {
-			return true;
-		}
-		// Note that r.Max is an exclusive bound for r, so that this.In(s)
-		// does not require that this.max.In(s).
-		return s.min.x <= min.x && max.x <= s.max.x &&
-			s.min.y <= min.y && max.y <= s.max.y;
-	}
-
-}

@@ -4,19 +4,23 @@ import Engine.Core;
 import Engine.Component;
 import std.stdio;
 
+
+
 class Transform : Component {
 	
 	package vec3 lastPosition = vec3(-1,-1,-1);
 	package vec3 lastRotation = vec3(-1,-1,-1);
 	package vec3 lastScale = vec3(-1,-1,-1);
 
-
-
-	@property ref vec3 Position()()  {
+	@property ref vec3 Position()  {
 		updateInvert = true;
 		updatePos = true;
 		return position;
 	};
+	
+
+
+
 
 	@property ref vec3 Scale()() {
 		updateInvert = true;
@@ -84,8 +88,7 @@ class Transform : Component {
 
 	mat4 InvertedMatrix()() {
 		if (updateInvert) {
-			invertMatrix = Matrix();
-			invertMatrix.invert();
+			invertMatrix = Matrix().inverse;
 		}
 		updateInvert = false;
 		return invertMatrix;

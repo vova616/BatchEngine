@@ -102,44 +102,20 @@ struct BatchData {
 	final void Update()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
 		if (updateUV) {
 			batchable.UpdateBatch(null,uv,null,null,0);
+			updateUV = false;
 		}
 		if (updateColor) {
 			batchable.UpdateBatch(null,null,color,null,0);
+			updateColor = false;
 		}
 		if (updateVertex) {
 			batchable.UpdateBatch(vertex,null,null,null,0);
+			updateVertex = false;
 		}
 		if (updateIndex) {
 			batchable.UpdateBatch(null,null,null,index,indexPosition);
+			updateIndex = false;
 		}
-		
-		updateUV = false;
-		updateColor = false;
-		updateVertex = false;
-		updateIndex = false;
-	}
-
-	void Update2()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
-		if (!updateUV && !updateColor && !updateVertex && !updateIndex) {
-			return;
-		}
-		if (!updateUV) {
-			uv = null;
-		}
-		if (!updateColor) {
-			color = null;
-		}
-		if (!updateVertex) {
-			vertex = null;
-		}
-		if (!updateIndex) {
-			index = null;
-		}
-		batchable.UpdateBatch(vertex,uv,color,index,indexPosition);
-		updateUV = false;
-		this.updateColor = false;
-		updateVertex = false;
-		updateIndex = false;
 	}
 
 	final void ForceUpdate()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {

@@ -6,13 +6,13 @@ import std.stdio;
 import std.conv;
 import Engine.Texture;
 import Engine.Atlas;
-import gl3n.linalg;
+import Engine.math;
 
 alias dchar[] CharSet;
 
 	
 struct LetterInfo {
-	public Rect AtlasRect;
+	public recti AtlasRect;
 	public dchar Charecter;
 	public double XOffset;        
 	public double YOffset;       
@@ -84,7 +84,7 @@ class Font {
 			throw new Exception("Could not set font size(is the font fixed sized?).");
 		
 
-		Rect[] rects = new Rect[set.length];
+		recti[] rects = new recti[set.length];
 		int rectsIndex = 0;
 		foreach(dchar chr; set) {
 			auto glyph_index = FT_Get_Char_Index( face, chr );
@@ -105,7 +105,7 @@ class Font {
 
 			auto height = bitmap.rows;
 			auto width = bitmap.width;
-			rects[rectsIndex] = Rect(width, height);
+			rects[rectsIndex] = recti(width, height);
 			rectsIndex++;
 		}
 

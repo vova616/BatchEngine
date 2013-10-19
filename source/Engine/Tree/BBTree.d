@@ -12,12 +12,17 @@ alias void delegate(Node* node)  HashSetIterator;
 
 class BBTree : Tree
 {
+	ChunkAllocator!(Pair, 100) pairAllocator;
 	ChunkAllocator!(Node, 100) nodeAllocator;
 	int allocatedNodes = 0;
+	int allocatedPair = 0;
 	int freedNodes = 0;
+	int freedPair = 0;
+
 
 	Node*[Indexable] leaves;
 	Node* root;
+
 
 	@property ref TimeStamp stamp() {
 		return stamp_;
@@ -50,9 +55,25 @@ class BBTree : Tree
 		leaves[obj] = leaf;	
 		this.root = this.SubtreeInsert(this.root, leaf);
 		leaf.stamp = GetMasterTree().stamp;
+		LeafAddPairs(leaf);
 		IncrementStamp();
 	}
 
+	void LeafAddPairs(Node *leaf)
+	{
+		if (dynamicTree !is null) {
+			auto dTree = cast(BBTree)dynamicTree;
+			if(dTree !is null && dTree.root !is null){
+				MarkContext context = MarkContext(dTree, null, null);
+				context.MarkLeafQuery(dTree.root, leaf, true);
+			}
+        } else {
+			auto sTree = cast(BBTree)staticTree;
+			Node *staticRoot = sTree !is null ?  sTree.root : null;
+			MarkContext context = MarkContext(this, staticRoot, null);
+			context.MarkLeaf(leaf);
+        }
+	}
 
 	void Query(Indexable obj, rect bb, SpatialIndexQueryFunc func) {
 		if(root) 
@@ -80,11 +101,32 @@ class BBTree : Tree
 			rt = SubtreeRemove(rt, leaf);
 			root = SubtreeInsert(rt, leaf);
 
+			PairsClear(leaf);
 			leaf.stamp = GetMasterTree.stamp;
 
 			return true;
         } else {
 			return false;
+        }
+	}
+
+	void PairsClear(Node *leaf)
+	{	
+        Pair *pair = leaf.pairs;
+        leaf.pairs = null;
+
+        while(pair !is null){
+			if(pair.a.leaf == leaf){
+				Pair *next = pair.a.next;
+				ThreadUnlink(pair.b);
+				PairRecycle(pair);
+				pair = next;
+			} else {
+				Pair *next = pair.b.next;
+				ThreadUnlink(pair.a);
+				PairRecycle(pair);
+				pair = next;
+			}
         }
 	}
 
@@ -102,6 +144,18 @@ class BBTree : Tree
         } else {
 			thread.leaf.pairs = next;
         }
+	}
+
+	Pair* PairFromPool() {
+		allocatedPair++;
+		return pairAllocator.allocate();
+	}
+
+	void PairRecycle(Pair *pair)
+	{
+		freedPair++;
+		pair.a.next = null;
+        pairAllocator.free(pair);
 	}
 
 	Node* NodeFromPool() {
@@ -263,11 +317,31 @@ class BBTree : Tree
 
 		node.parent = null;
 		node.stamp = 0;
+		node.pairs = null;
 
 		return node;
 	}
 
+	void PairInsert(Node *a, Node *b)
+	{
+        Pair* nextA = a.pairs, nextB = b.pairs;
+        Pair *pair = PairFromPool();
+		*pair = Pair(Thread(null, a, nextA),Thread(null, b, nextB), 0);
+
+        a.pairs = b.pairs = pair;
+
+        if(nextA !is null){
+			if(nextA.a.leaf == a) nextA.a.prev = pair; else nextA.b.prev = pair;
+        }
+
+        if(nextB !is null){
+			if(nextB.a.leaf == b) nextB.a.prev = pair; else nextB.b.prev = pair;
+        }
+	}
+
 	static this() {
+		
+		
 		class Box : Indexable {
 			rect bb;
 			this(rect bb) {
@@ -292,8 +366,8 @@ class BBTree : Tree
 		tree.Insert(b1);
 		tree.Insert(new Box(rect(vec2(5,5), vec2(6,6))));
 		for (int i=0;i<10000;i++) {
-			auto min = vec2(2,2);
-			auto max = vec2(3,3);
+			auto min = vec2(i*2,i*2);
+			auto max = vec2(i*3,i*3);
 			tree.Insert(new Box(rect(min, max)));
 		}
 		
@@ -306,7 +380,7 @@ class BBTree : Tree
 
 		string s;
 		GC.enable();
-		writeln("Inserted", tree.allocatedNodes," ", tree.freedNodes);
+		writeln("Inserted", tree.allocatedNodes, " ", tree.allocatedPair," ", tree.freedNodes," ", tree.freedPair);
 		scanf("%s", &s);
 		
 		StopWatch t1;
@@ -352,7 +426,6 @@ struct MarkContext {
 
 	void MarkLeafQuery()(Node *subtree, Node *leaf, bool left)
 	{
-		/*
         if(rect.Intersects(leaf.bb, subtree.bb)){
 			if(subtree.NodeIsLeaf()) {
 				if(left){
@@ -368,12 +441,10 @@ struct MarkContext {
 				MarkLeafQuery(subtree.b, leaf, left);
 			}
         }
-		*/
 	}
 
 	void MarkLeaf()(Node *leaf)
 	{
-		/*
         if(leaf.stamp == tree.GetMasterTree().stamp) {
 			Node *staticRoot = staticRoot;
 			if(staticRoot !is null) 
@@ -398,7 +469,6 @@ struct MarkContext {
 				}
 			}
         }
-		*/
 	}
 
 	void MarkSubtree()(Node *subtree)
@@ -416,6 +486,17 @@ struct MarkContext {
 interface Indexable {
 	//Hash GetHash();
 	rect BB();
+}
+
+struct Thread  {
+	Pair* prev;
+	Node* leaf;
+	Pair* next;
+}
+
+struct Pair {
+	Thread a, b; 
+	ulong id;
 }
 
 struct Node {
@@ -450,4 +531,5 @@ struct Node {
 
 	//leaf
 	TimeStamp stamp;
+	Pair* pairs;
 };

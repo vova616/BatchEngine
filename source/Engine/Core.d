@@ -56,7 +56,7 @@ public class Core
 			entities[index] = replaceEntity;
 			replaceEntity.arrayIndex = index;
 			entity.arrayIndex = -1;
-			//entities[entities.length-1] = null; no idea how array resize works
+			entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
 			entities.length--;
 		}
 	}
@@ -131,12 +131,10 @@ public class Core
 			0,cos(rot.x),-sin(rot.x),
 			0,sin(rot.x),cos(rot.x))
 			*
-
 			mat3(cos(rot.y),0,sin(rot.y),
 			0,1,0,
 			-sin(rot.y),0,cos(rot.y))
 			*
-
 			mat3(cos(rot.z),-sin(rot.z),0,
 			sin(rot.z),cos(rot.z),0,
 			0,0,1);

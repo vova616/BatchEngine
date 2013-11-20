@@ -1,6 +1,68 @@
 module Engine.math;
 
 public import gl3n.linalg;
+import std.traits;
+
+struct dirty(T) {
+	bool dirty = true;
+	T val;
+
+	alias val this;	
+
+	this(T v) {
+		val = v;
+	}
+
+	@property opDispatch(string s, Args...)(Args args) {
+		static if (mixin("isSomeFunction!(T."~s~")")) {
+			static if(mixin("isFuncMutable!(T."~s~")") && !mixin("functionAttributes!(T."~s~") & FunctionAttribute.property")) {
+				dirty = true;
+			}
+			static if (mixin("is(ReturnType!(T."~s~") == void)")) {
+				mixin("val." ~ s ~ "(args);");
+			} else {
+				static if (args.length > 0 && mixin("functionAttributes!(T."~s~") & FunctionAttribute.property")) {
+					dirty = true;
+					mixin("val." ~ s ~ " = cast(typeof(val." ~ s ~"))args[0];");
+				} else {
+					return mixin("val." ~ s ~ "(args)");
+				}
+			}
+		} else {
+			static if(args.length > 0) {
+				dirty = true;
+				mixin("val." ~ s ~ " = cast(typeof(val." ~ s  ~ "))args[0];");
+			} else {
+				return mixin("val." ~ s);
+			}
+		}
+	}
+
+	void opOpAssign(string op, R)(R r) {
+		dirty = true;
+		mixin("val" ~ op ~ "= r;");
+	}
+
+	void opAssign(R)(auto ref const R r) {
+		static if (__traits(compiles, val.opAssign!R(r))) {
+			val.opAssign!R(r);
+		} else {
+			val = r;
+		}
+		dirty = true;
+	}
+
+	T opUnary(string s)() {
+		dirty = true;
+		return mixin(s ~ "val");
+	}
+}
+
+template isFuncMutable(T...) if (T.length == 1)
+{
+	enum bool isFuncMutable = !(is(typeof(T[0]) == const) || is(typeof(T[0]) == immutable));
+}
+
 
 alias Rect!(int) recti;
 alias Rect!(float) rect;
@@ -15,6 +77,11 @@ struct Rect(T) {
 
 	this(T width, T height) {
 		max = vectp(width,height);
+	}
+
+	void add(vectp v) {
+		min += v;
+		max += v;
 	}
 
 	nothrow this(vectp min, vectp max) {

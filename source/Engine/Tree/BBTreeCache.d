@@ -1,60 +1,28 @@
-module Engine.Tree.BBTree;
+module Engine.Tree.BBTreeCache;
 
 import Engine.math;
 alias ulong TimeStamp;
 alias ulong Hash;
 import std.stdio;
 import Engine.Allocator;
-import std.parallelism;
-import std.concurrency;
-import core.atomic;
 
 alias ulong delegate(Indexable a,Indexable b, ulong collisionID) SpatialIndexQueryFunc;
 alias void delegate(Node* node)  HashSetIterator;
 
-shared class Stack(T) {
-	private shared struct Node {
-		T _payload;
-		Node * _next;
-	}
-	private Node * _root;
-	
-	void push(T value) {
-		auto n = cast(shared)new Node(value);
-		n._payload = value;
-		shared(Node)* oldRoot;
-		do {
-			oldRoot = _root;
-			n._next = oldRoot;
-		} while (!cas(&_root, oldRoot, n));
-	}
-	
-	shared(T)* pop() {
-		typeof(return) result;
-		shared(Node)* oldRoot;
-		do {
-			oldRoot = _root;
-			if (!oldRoot) return null;
-			result = & oldRoot._payload;
-		} while (!cas(&_root, oldRoot, oldRoot._next));
-		return result;
-	}
-
-	bool empty() {
-		if (atomicLoad(_root))
-			return false;
-		return true;
-	}
-}
 
 class BBTree : Tree
 {
+	ChunkAllocator!(Pair, 100) pairAllocator;
 	ChunkAllocator!(Node, 100) nodeAllocator;
 	int allocatedNodes = 0;
+	int allocatedPair = 0;
 	int freedNodes = 0;
+	int freedPair = 0;
+
 
 	Node*[Indexable] leaves;
 	Node* root;
+
 
 	@property ref TimeStamp stamp() {
 		return stamp_;
@@ -87,9 +55,25 @@ class BBTree : Tree
 		leaves[obj] = leaf;	
 		this.root = this.SubtreeInsert(this.root, leaf);
 		leaf.stamp = GetMasterTree().stamp;
+		LeafAddPairs(leaf);
 		IncrementStamp();
 	}
 
+	void LeafAddPairs(Node *leaf)
+	{
+		if (dynamicTree !is null) {
+			auto dTree = cast(BBTree)dynamicTree;
+			if(dTree !is null && dTree.root !is null){
+				MarkContext context = MarkContext(dTree, null, null);
+				context.MarkLeafQuery(dTree.root, leaf, true);
+			}
+        } else {
+			auto sTree = cast(BBTree)staticTree;
+			Node *staticRoot = sTree !is null ?  sTree.root : null;
+			MarkContext context = MarkContext(this, staticRoot, null);
+			context.MarkLeaf(leaf);
+        }
+	}
 
 	void Query(Indexable obj, rect bb, SpatialIndexQueryFunc func) {
 		if(root) 
@@ -108,45 +92,6 @@ class BBTree : Tree
         }
 	}
 
-	int bbChecks = 0;
-
-	void LeafQuery()(Node *subtree, Node *leaf, SpatialIndexQueryFunc func)
-	{
-		bbChecks++;
-        if(rect.Intersects(leaf.bb, subtree.bb)){
-			if(subtree.NodeIsLeaf()) {
-				if (func !is null) {
-					func(leaf.obj, subtree.obj, 0);
-				}
-			} else {
-				LeafQuery(subtree.a, leaf,func);
-				LeafQuery(subtree.b, leaf,func);
-			}
-        }
-	}
-
-	void NodeQuery()(Node *leaf, Node *staticRoot, SpatialIndexQueryFunc func)
-	{
-		if(staticRoot !is null) 
-			LeafQuery(staticRoot, leaf, func);
-
-		for(Node *node = leaf; node.parent !is null; node = node.parent){
-			if(node == node.parent.a){
-				LeafQuery(node.parent.b, leaf, func);
-			}
-		}
-	}
-
-
-	void SubtreeSelfQuery()(Node *subtree, Node *staticRoot, SpatialIndexQueryFunc func) {
-		if(subtree.NodeIsLeaf()){
-			NodeQuery(subtree,staticRoot,func);
-        } else {
-			SubtreeSelfQuery(subtree.a,staticRoot,func);
-			SubtreeSelfQuery(subtree.b,staticRoot,func); // TODO: Force TCO here?
-        }
-	}
-
 	bool LeafUpdate(Node *leaf)
 	{
 		auto rt = root;
@@ -156,12 +101,61 @@ class BBTree : Tree
 			rt = SubtreeRemove(rt, leaf);
 			root = SubtreeInsert(rt, leaf);
 
+			PairsClear(leaf);
 			leaf.stamp = GetMasterTree.stamp;
 
 			return true;
         } else {
 			return false;
         }
+	}
+
+	void PairsClear(Node *leaf)
+	{	
+        Pair *pair = leaf.pairs;
+        leaf.pairs = null;
+
+        while(pair !is null){
+			if(pair.a.leaf == leaf){
+				Pair *next = pair.a.next;
+				ThreadUnlink(pair.b);
+				PairRecycle(pair);
+				pair = next;
+			} else {
+				Pair *next = pair.b.next;
+				ThreadUnlink(pair.a);
+				PairRecycle(pair);
+				pair = next;
+			}
+        }
+	}
+
+	void ThreadUnlink()(auto ref Thread thread)
+	{
+        auto next = thread.next;
+        auto prev = thread.prev;
+
+        if(next){
+			if(next.a.leaf == thread.leaf) next.a.prev = prev; else next.b.prev = prev;
+        }
+
+        if(prev){
+			if(prev.a.leaf == thread.leaf) prev.a.next = next; else prev.b.next = next;
+        } else {
+			thread.leaf.pairs = next;
+        }
+	}
+
+	Pair* PairFromPool() {
+		allocatedPair++;
+		return pairAllocator.allocate();
+	}
+
+	void PairRecycle(Pair *pair)
+	{
+		freedPair++;
+		pair.a.next = null;
+        pairAllocator.free(pair);
 	}
 
 	Node* NodeFromPool() {
@@ -224,8 +218,8 @@ class BBTree : Tree
         auto staticIndex = cast(BBTree)staticTree;
         Node *staticRoot = staticIndex !is null ? staticIndex.root : null;
 
-		SubtreeSelfQuery(root,staticRoot,func);
-	
+        MarkContext context = MarkContext(this, staticRoot, func);
+        context.MarkSubtree(root);
         if(staticIndex && !staticRoot) 
 			SpatialIndexCollideStatic(this, staticIndex, func);
 
@@ -323,8 +317,26 @@ class BBTree : Tree
 
 		node.parent = null;
 		node.stamp = 0;
+		node.pairs = null;
 
 		return node;
+	}
+
+	void PairInsert(Node *a, Node *b)
+	{
+        Pair* nextA = a.pairs, nextB = b.pairs;
+        Pair *pair = PairFromPool();
+		*pair = Pair(Thread(null, a, nextA),Thread(null, b, nextB), 0);
+
+        a.pairs = b.pairs = pair;
+
+        if(nextA !is null){
+			if(nextA.a.leaf == a) nextA.a.prev = pair; else nextA.b.prev = pair;
+        }
+
+        if(nextB !is null){
+			if(nextB.a.leaf == b) nextB.a.prev = pair; else nextB.b.prev = pair;
+        }
 	}
 }
 
@@ -349,13 +361,89 @@ interface Tree {
 	//SegmentQuery(obj Indexable, a, b vect.Vect, t_exit vect.Float, fnc func())
 }
 
+struct MarkContext {
+	BBTree tree;
+	Node* staticRoot;
+	SpatialIndexQueryFunc func;
+
+
+	void MarkLeafQuery()(Node *subtree, Node *leaf, bool left)
+	{
+        if(rect.Intersects(leaf.bb, subtree.bb)){
+			if(subtree.NodeIsLeaf()) {
+				if(left){
+					tree.PairInsert(leaf, subtree);
+				} else {
+					if(subtree.stamp < leaf.stamp) 
+						tree.PairInsert(subtree, leaf);
+					if (func !is null)
+						func(leaf.obj, subtree.obj, 0);
+				}
+			} else {
+				MarkLeafQuery(subtree.a, leaf, left);
+				MarkLeafQuery(subtree.b, leaf, left);
+			}
+        }
+	}
+
+	void MarkLeaf()(Node *leaf)
+	{
+        if(leaf.stamp == tree.GetMasterTree().stamp) {
+			Node *staticRoot = staticRoot;
+			if(staticRoot !is null) 
+				MarkLeafQuery(staticRoot, leaf, false);
+
+			for(Node *node = leaf; node.parent !is null; node = node.parent){
+				if(node == node.parent.a){
+					MarkLeafQuery(node.parent.b, leaf, true);
+				} else {
+					MarkLeafQuery(node.parent.a, leaf, false);
+				}
+			}
+        } else {
+			Pair *pair = leaf.pairs;
+			while(pair !is null){
+				if(leaf == pair.b.leaf){
+					if (func !is null)
+						pair.id = func(pair.a.leaf.obj, leaf.obj, pair.id);
+					pair = pair.b.next;
+				} else {
+					pair = pair.a.next;
+				}
+			}
+        }
+	}
+
+	void MarkSubtree()(Node *subtree)
+	{
+        if(subtree.NodeIsLeaf()){
+			MarkLeaf(subtree);
+        } else {
+			MarkSubtree(subtree.a);
+			MarkSubtree(subtree.b); // TODO: Force TCO here?
+        }
+	}
+
+};
+
 interface Indexable {
 	//Hash GetHash();
 	rect BB();
 }
 
-private struct Node {
-	public Indexable obj;
+struct Thread  {
+	Pair* prev;
+	Node* leaf;
+	Pair* next;
+}
+
+struct Pair {
+	Thread a, b; 
+	ulong id;
+}
+
+struct Node {
+	Indexable obj;
 	rect bb;
 	Node *parent;
 
@@ -386,4 +474,5 @@ private struct Node {
 
 	//leaf
 	TimeStamp stamp;
+	Pair* pairs;
 };

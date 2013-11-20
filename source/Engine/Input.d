@@ -17,12 +17,25 @@ public static class Input
 
 	package static void Initialize() {
 		glfwSetKeyCallback(Core.window,&KeyCallback);
+		glfwSetMouseButtonCallback(Core.window,&MouseKeyCallback);
 		double x,y;
 		glfwGetCursorPos(Core.window, &x, &y);
 		mousePos.x = x;
 		mousePos.y = y;
 	}
-
+		
+	extern (C) package static void MouseKeyCallback(GLFWwindow* window, int key, int action, int mods) nothrow {
+		switch (action) {
+			case GLFW_PRESS:
+				keysState[key] = state.firstPress;
+				break;
+			case GLFW_RELEASE:
+				keysState[key] = state.wasPressed;
+				break;
+			default:
+				break;
+		}	
+	}
 
 	extern (C) package static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) nothrow {
 		switch (action) {

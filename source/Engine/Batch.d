@@ -11,8 +11,8 @@ import Engine.Core;
 import engine = Engine.Entity;
 import std.parallelism;
 import std.bitmanip;
-
- import std.datetime;
+import Engine.Allocator;
+import std.datetime;
 
 struct BatchData {
 	enum Type {
@@ -131,6 +131,8 @@ class Batch {
 	Buffer index;
 	Buffer matrix;
 
+	//ChunkAllocator!(BatchData, 100) batchAllocator;
+
 	BatchData*[] Batches;
 	BatchData*[] CheckBatches;
 	BatchData[] DeleteBatches;
@@ -180,10 +182,13 @@ class Batch {
 			isize = 2 * (indexIndex + batch.indecies);
 			resize = true;
 		}		
-		Batches ~= new BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		//auto b = batchAllocator.allocate();
+		auto b = new BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		//*b = BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		Batches ~= b;
 		vertexIndex += batch.vertecies;
 		indexIndex += batch.indecies;
-		batch.OnBatchSetup(Batches[Batches.length-1]);
+		batch.OnBatchSetup(b);
 	}
 
 
@@ -279,21 +284,24 @@ class Batch {
 
 		//Multithreaded batch updates.
 		auto ti = taskPool.workerLocalStorage(0);
-		//auto tid = taskPool.workerLocalStorage(material);
 		if (updateAll) {
 			foreach( e; parallel(Batches)) {
 				auto indx = e.vertexIndex;
 				auto max = indx+e.vertexCount;	
 				e.ForceUpdate(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
-		
+				
 				//if (e.updateTransform || 1 == 1) {
 				auto t = e.entity.transform;
 				auto p = t.position;
 				auto r = t.rotation;
 				auto s = t.scale;
+				
+				
 
 				for (;indx<max;indx++) {
-					matrcies[indx] = [p,r,s];
+					matrcies[indx][0] = p;
+					matrcies[indx][1] = r;
+					matrcies[indx][2] = s;
 				}
 			}
 		} else {	
@@ -302,7 +310,7 @@ class Batch {
 				auto indx = e.vertexIndex;
 				auto max = indx+e.vertexCount;	
 				e.Update(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
-		
+
 				//if (e.updateTransform || 1 == 1) {
 				auto t = e.entity.transform;
 				auto p = t.position;
@@ -310,7 +318,9 @@ class Batch {
 				auto s = t.scale;
 				
 				for (;indx<max;indx++) {
-					matrcies[indx] = [p,r,s];
+					matrcies[indx][0] = p;
+					matrcies[indx][1] = r;
+					matrcies[indx][2] = s;
 				}
 			}
 		}

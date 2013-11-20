@@ -8,19 +8,11 @@ import std.stdio;
 
 class Transform : Component {
 	
-	package vec3 lastPosition = vec3(-1,-1,-1);
-	package vec3 lastRotation = vec3(-1,-1,-1);
-	package vec3 lastScale = vec3(-1,-1,-1);
-
 	@property ref vec3 Position()  {
 		updateInvert = true;
 		updatePos = true;
 		return position;
 	};
-	
-
-
-
 
 	@property ref vec3 Scale()() {
 		updateInvert = true;
@@ -63,19 +55,16 @@ class Transform : Component {
 		bool recalculate = false;
 		if (updateRot) {
 			rotateMatrix = mat4.identity.rotatex(rotation.x).rotatey(rotation.y).rotatez(rotation.z);
-			lastRotation = rotation;
 			recalculate = true;
 			updateRot = false;
 		}	
 		if (updateScale) {
 			scaleMatrix = mat4.identity.scale(scale.x, scale.y, scale.z);
-			lastScale = scale;
 			recalculate = true;
 			updateScale = false;
 		}
 		if (updatePos) {
 			translateMatrix = mat4.identity.translation(position.x, position.y, position.z);
-			lastPosition = position;
 			recalculate = true;
 			updatePos = false;
 		}

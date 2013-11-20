@@ -32,7 +32,7 @@ class Camera : Component {
 
 	//Takes a point on the screen and turns it into point on world
 	vec2 ScreenToWorld(float x, float y)  {
-		auto p = transform.Position;
+		auto p = transform.position;
 		return vec2(p.x + x,p.y + y);
 		//return (vec4(x,y,0,1) * transform.Matrix()).xy;
 	}
@@ -44,6 +44,12 @@ class Camera : Component {
 		p.x += realRect.min.x;
 		p.y = realRect.max.y-p.y;
 		return p;
+	}
+
+	recti bounds() {
+		auto r = realRect;
+		r.add(vec2i(cast(int)transform.position.x,cast(int)transform.position.y));
+		return r;
 	}
 
 	//Updates the Projection

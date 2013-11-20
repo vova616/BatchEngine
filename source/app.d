@@ -130,12 +130,12 @@ class GravityMouse : Component {
 
 class InputHandle : Component {
 	override void Update() {
-		if (Input.KeyDown(Key.Q))  {
-			Core.camera.size += 0.5*Core.DeltaTime;
+		if (Input.MouseScroll().y > 0)  {
+			Core.camera.size += 3*Core.DeltaTime;
 			Core.camera.UpdateResolution();
 		}	
-		if (Input.KeyDown(Key.W)) {
-			Core.camera.size -= 0.5*Core.DeltaTime;
+		if (Input.MouseScroll().y < 0) {
+			Core.camera.size -= 3*Core.DeltaTime;
 			Core.camera.UpdateResolution();
 		}
 		if (Input.KeyDown(Key.A)) {
@@ -297,20 +297,19 @@ void run() {
 			time += Core.DeltaTime;
 			frames++;
 			if (time >= 1) {
-				fps.SetText("FPS: " ~ to!string(frames));
+				fps.SetText("FPS: " ~ to!string(frames) ~ " GameObjects:" ~ to!string(Core.EntitiesCount) );
 				writeln(to!string(frames));
 				time -= 1;
 				frames = 0;
-				
-			}
+			}	
 			auto camRect = Core.camera.bounds();
-			fps.entity.transform.position = vec3(camRect.min.x + 100*Core.camera.size, camRect.max.y - 50*Core.camera.size,0);
+			fps.entity.transform.position = vec3((camRect.max.x+camRect.min.x) / 2, camRect.max.y - 50*Core.camera.size,0);
 			fps.entity.transform.scale = vec3(1,1,1) * Core.camera.size * 34;
 			mmouse.transform.position = vec3(Core.camera.MouseWorldPosition(),0);
 
 			if (Input.KeyDown(Key.MOUSE_BUTTON_1)) {
 				{
-					for (int i=0;i<10;i++) {
+					for (int i=0;i<100;i++) {
 						auto ship = new Entity();
 						ship.AddComponent(new Sprite(shipTexture));
 						ship.AddComponent(new GravityMouse());
@@ -323,7 +322,7 @@ void run() {
 						//ship.transform.position += vec3(0,10000,0);
 						//ship.transform.position = vec3(uniform(0,Core.width),uniform(0,Core.height),0);
 						ship.transform.scale = vec3(4, 4, 1);
-					}	
+					}		
 				}
 			}
 		

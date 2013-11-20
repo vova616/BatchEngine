@@ -26,6 +26,10 @@ public class Core
 
 	public shared static double DeltaTime;
 
+	public static size_t EntitiesCount() {
+		return entities.length;
+	}
+
 	public static void AddEntity(Entity entity) {
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;

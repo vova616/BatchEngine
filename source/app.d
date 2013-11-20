@@ -150,6 +150,25 @@ class InputHandle : Component {
 		if (Input.KeyDown(Key.R)) {
 			GravityMouse.force -= GravityMouse.force*Core.DeltaTime*2;
 		}
+		if (Input.KeyDown(Key.MOUSE_BUTTON_1)) {
+		{
+			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
+			for (int i=0;i<20;i++) {
+				auto ship = new Entity();
+				ship.AddComponent(new Sprite(ballTexture));
+				ship.AddComponent(new GravityMouse());
+				//ship.AddComponent(new GameOfLife());
+				Core.AddEntity(ship);
+				ship.transform.scale.x = 10;
+				ship.transform.scale.y = 10;
+				ship.transform.rotation = vec3(0,0,0);
+				ship.transform.position = mpos + vec3(-5+i/2,-5+i/2,0) ;
+				//ship.transform.position += vec3(0,10000,0);
+				//ship.transform.position = vec3(uniform(0,Core.width),uniform(0,Core.height),0);
+				ship.transform.scale = vec3(4, 4, 1);
+			}		
+		}
+		}
 	}
 }
 
@@ -204,6 +223,7 @@ void main(string[] args) {
 	}
 }
 
+Texture ballTexture;
 
 void run() {
 	Core.Start();
@@ -217,8 +237,8 @@ void run() {
 	
 
 	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
-	auto shipTexture = new Texture("./public/sprite.png\0");
-	shipTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
+	ballTexture = new Texture("./public/sprite.png\0");
+	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 	//for (int i=0;i<10000;i++) {
 	auto e = new Entity();
 	e.AddComponent(new Sprite(t.Atlas));
@@ -230,17 +250,17 @@ void run() {
 	e.transform.scale = vec3(t.Atlas.width, t.Atlas.height, 1);
 	//}
 	
-	//batch.transform.scale = vec3(shipTexture.width, shipTexture.height, 1);
+	//batch.transform.scale = vec3(ballTexture.width, ballTexture.height, 1);
 	
 	auto mmouse = new Entity();
-	//mmouse.AddComponent(new Sprite(shipTexture));
+	//mmouse.AddComponent(new Sprite(ballTexture));
 	//Core.AddEntity(mmouse);
 	mmouse.transform.scale = vec3(100, 100, 1);
 	
 			
 	for (int i=0;i<10000;i++) {
 		auto ship = new Entity();
-		ship.AddComponent(new Sprite(shipTexture));
+		ship.AddComponent(new Sprite(ballTexture));
 		ship.AddComponent(new GravityMouse());
 		//ship.AddComponent(new GameOfLife());
 		Core.AddEntity(ship);
@@ -307,25 +327,6 @@ void run() {
 			fps.entity.transform.scale = vec3(1,1,1) * Core.camera.size * 34;
 			mmouse.transform.position = vec3(Core.camera.MouseWorldPosition(),0);
 
-			if (Input.KeyDown(Key.MOUSE_BUTTON_1)) {
-				{
-					for (int i=0;i<100;i++) {
-						auto ship = new Entity();
-						ship.AddComponent(new Sprite(shipTexture));
-						ship.AddComponent(new GravityMouse());
-						//ship.AddComponent(new GameOfLife());
-						Core.AddEntity(ship);
-						ship.transform.scale.x = 10;
-						ship.transform.scale.y = 10;
-						ship.transform.rotation = vec3(0,0,0);
-						ship.transform.position = mmouse.transform.position + vec3(-5+i/2,-5+i/2,0) ;
-						//ship.transform.position += vec3(0,10000,0);
-						//ship.transform.position = vec3(uniform(0,Core.width),uniform(0,Core.height),0);
-						ship.transform.scale = vec3(4, 4, 1);
-					}		
-				}
-			}
-		
 			Coroutine.yield();
 		}
 	});

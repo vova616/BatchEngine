@@ -6,7 +6,8 @@ import derelict.glfw3.glfw3;
 public static class Input
 {
 	package static state[int] keysState;
-	package static __gshared vec2  mousePos = vec2i(0,0);
+	package static __gshared vec2 mousePos = vec2i(0,0);
+	package static __gshared vec2 mouseScroll = vec2(0,0);
 
 	package enum state {
 		notPressed = 0,
@@ -18,10 +19,16 @@ public static class Input
 	package static void Initialize() {
 		glfwSetKeyCallback(Core.window,&KeyCallback);
 		glfwSetMouseButtonCallback(Core.window,&MouseKeyCallback);
+		glfwSetScrollCallback(Core.window,&MouseScrollCallback);
 		double x,y;
 		glfwGetCursorPos(Core.window, &x, &y);
 		mousePos.x = x;
 		mousePos.y = y;
+	}
+	
+	extern (C) package static void MouseScrollCallback(GLFWwindow* window, double x, double y) nothrow {
+		mouseScroll.x = x;
+		mouseScroll.y = y;
 	}
 		
 	extern (C) package static void MouseKeyCallback(GLFWwindow* window, int key, int action, int mods) nothrow {
@@ -68,6 +75,8 @@ public static class Input
 		glfwGetCursorPos(Core.window, &x, &y);
 		mousePos.x = x;
 		mousePos.y = y;
+	
+		mouseScroll = vec2(0,0);
 	}	
 
 	private static state getState(int key) {
@@ -98,7 +107,9 @@ public static class Input
 		return vec2(mousePos.x, mousePos.y);
 	}
 
-
+	public static vec2 MouseScroll()   {
+		return mouseScroll;
+	}
 
 }
 

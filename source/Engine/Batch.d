@@ -219,16 +219,18 @@ class Batch {
 
 			 b.vertexCount = b.batchable.vertecies;
 			 b.indexCount = b.batchable.indecies;
+			 auto tic = b.totalIndexCount;
+		  	 auto ii = b.indexIndex;
+		  	 //Increase vertex size if needed
 			 if (b.vertexCount > b.totalVertexCount || b.indexCount > b.totalIndexCount) {
-				 auto tic = b.totalIndexCount;
-				 auto ii = b.indexIndex;
 				 b.totalVertexCount = b.vertexCount * 2;
 				 b.totalIndexCount = b.indexCount * 2;
 				 Resize(b);
-				 if (!resize ) {
-					DeleteBatches ~= BatchData(null,null,null,0,ii,0,0,0,tic);
-				 }
 			 }	
+			 //Delete batch data if needed
+			 if (!resize ) {
+				DeleteBatches ~= BatchData(null,null,null,0,ii,0,0,0,tic);
+			 }
 		 }			
 		 CheckBatches.length = 0;
 	

@@ -7,7 +7,8 @@ import Engine.Coroutine;
 import std.stdio;
 import Engine.Sprite;
 
-package extern (C) Object _d_newclass (ClassInfo info);
+package extern (C) Object _d_newclass (in ClassInfo info);
+
 T copy(T:Object) (T value)
 {
 	if (value is null)
@@ -27,6 +28,12 @@ T copy2(T:Object) (T value)
 	c[0..size] = (cast (void *) value)[0..size];
 	(cast(Object)c).__monitor = null;
 	return cast (T)c;
+}
+
+
+package Object newInstance (in ClassInfo classInfo)
+{
+	return _d_newclass(classInfo);
 }
 
 package const static Component dummyComponent;
@@ -78,6 +85,14 @@ class Entity
 		return t;
 	}
 
+	public T* AddComponent(T, Args...)(Args args) {
+		auto t = new ComponentImpl!(T)(args);
+		components ~= t;
+		t.bind(this);
+		t.OnComponentAdd();
+		return &t.component;
+	}
+	
 	public T GetComponent(T)() {
 		foreach(ref c; components) {
 			T t = cast(T)c;

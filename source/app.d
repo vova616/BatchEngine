@@ -69,12 +69,13 @@ class MovementSystem : CSystem!(position*) {
 }
 
 
-class GravityMouse : Component {
-	
+class GravityMouse  {
+	 mixin ComponentBase;
+
 	 vec3 v = vec3(0,0,0);
 	 static float force = 1000;
 
-	 override void Update() {
+	  void Update() {
 		 auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 
 		
@@ -98,17 +99,17 @@ class GravityMouse : Component {
 		 auto max = bounds.max;
 
 		 if (pos.x < min.x) {
-			 v.x = -v.x/2;
+			 v.x = -v.x/8;
 			 pos.x = min.x;
 		 } else if (pos.x > max.x) {
-			 v.x = -v.x/2;
+			 v.x = -v.x/8;
 			 pos.x = max.x;
 		 }
 		 if (pos.y < min.y) {
-			 v.y = -v.y/2;
+			 v.y = -v.y/8;
 			 pos.y = min.y;
 		 } else if (pos.y > max.y) {
-			 v.y = -v.y/2;
+			 v.y = -v.y/8;
 			 pos.y = max.y;
 		 }
 		 transform.position = pos;
@@ -156,7 +157,7 @@ class InputHandle : Component {
 			for (int i=0;i<20;i++) {
 				auto ship = new Entity();
 				ship.AddComponent(new Sprite(ballTexture));
-				ship.AddComponent(new GravityMouse());
+				ship.AddComponent!GravityMouse();
 				//ship.AddComponent(new GameOfLife());
 				Core.AddEntity(ship);
 				ship.transform.scale.x = 10;
@@ -261,7 +262,7 @@ void run() {
 	for (int i=0;i<10000;i++) {
 		auto ship = new Entity();
 		ship.AddComponent(new Sprite(ballTexture));
-		ship.AddComponent(new GravityMouse());
+		ship.AddComponent!(GravityMouse)();
 		//ship.AddComponent(new GameOfLife());
 		Core.AddEntity(ship);
 		ship.transform.scale.x = 10;
@@ -279,7 +280,7 @@ void run() {
 		auto e2 = new Entity();
 		e2.transform.scale.x = 32;
 		e2.transform.scale.y = 32;
-		e2.AddComponent(new GravityMouse());
+		e2.AddComponent!GravityMouse();
 		e2.transform.position = vec3(((i%100)*10)%Core.width,(i*25)%Core.height,0);
 		e2.AddComponent(new Label(t,to!string(i)));
 		Core.AddEntity(e2);	
@@ -288,7 +289,7 @@ void run() {
 	auto e2 = new Entity();
 	e2.transform.scale.x = 32;
 	e2.transform.scale.y = 32;
-	e2.AddComponent(new GravityMouse());
+	e2.AddComponent!GravityMouse();
 	e2.transform.position = vec3(200,400,0);
 	e2.AddComponent(new Label(t,"Hallo FCUKER"));
 	//Core.AddEntity(e2);	

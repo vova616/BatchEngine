@@ -78,7 +78,7 @@ class GravityMouse  {
 	 const m1 = 100000;
 	 const m2 = 100;
 
-	 override void Update() {
+	 void Update() {
 		 auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 
 		

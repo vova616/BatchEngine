@@ -75,16 +75,12 @@ class GravityMouse  {
 	 vec3 v = vec3(0,0,0);
 	 static float force = 6.674*10e-6;
 
-	 const m1 = 100000;
-	 const m2 = 100;
-
+	 enum m1 = 100000;
+	 enum m2 = 100;
+	
+			
 	 void Update() {
 		 auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
-
-		
-		// 
-		// writeln(Core.camera.transform.scale);
-
 		 auto dir = (mpos - transform.position);
 		 auto dis = (dir.x*dir.x)+(dir.y*dir.y);
 		 dir.normalize();
@@ -157,7 +153,7 @@ class InputHandle : Component {
 			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 			for (int i=0;i<20;i++) {
 				auto ship = new Entity();
-				ship.AddComponent(new Sprite(ballTexture));
+				ship.AddComponent!(Sprite)(ballTexture);
 				ship.AddComponent!GravityMouse();
 				//ship.AddComponent(new GameOfLife());
 				Core.AddEntity(ship);
@@ -243,7 +239,7 @@ void run() {
 	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 	//for (int i=0;i<10000;i++) {
 	auto e = new Entity();
-	e.AddComponent(new Sprite(t.Atlas));
+	e.AddComponent!(Sprite)(t.Atlas);
 	//Core.AddEntity(e);
 	e.transform.scale.x = 500;
 	e.transform.scale.y = 500;
@@ -262,7 +258,7 @@ void run() {
 			
 	for (int i=0;i<10000;i++) {
 		auto ship = new Entity();
-		ship.AddComponent(new Sprite(ballTexture));
+		ship.AddComponent!(Sprite)(ballTexture);
 		ship.AddComponent!(GravityMouse)();
 		//ship.AddComponent(new GameOfLife());
 		Core.AddEntity(ship);
@@ -283,7 +279,7 @@ void run() {
 		e2.transform.scale.y = 32;
 		e2.AddComponent!GravityMouse();
 		e2.transform.position = vec3(((i%100)*10)%Core.width,(i*25)%Core.height,0);
-		e2.AddComponent(new Label(t,to!string(i)));
+		e2.AddComponent!Label(t,to!string(i));
 		Core.AddEntity(e2);	
 	}
 
@@ -292,7 +288,7 @@ void run() {
 	e2.transform.scale.y = 32;
 	e2.AddComponent!GravityMouse();
 	e2.transform.position = vec3(200,400,0);
-	e2.AddComponent(new Label(t,"Hallo FCUKER"));
+	e2.AddComponent!Label(t,"Hallo FCUKER");
 	//Core.AddEntity(e2);	
 
 
@@ -308,8 +304,7 @@ void run() {
 	e3.transform.scale.x = 32;
 	e3.transform.scale.y = 32;
 	e3.transform.position = vec3(100,Core.height-50,0);
-	auto fps = new Label(t,"FPS");
-	e3.AddComponent(fps);
+	auto fps = e3.AddComponent!Label(t,"FPS");
 	Core.AddEntity(e3);	
 
 	StartCoroutine( {

@@ -76,12 +76,16 @@ class Entity
 		
 	public T AddComponent(T : Component)(T t) {
 		components ~= t;
-			
-		//if ((&t.Start).funcptr != (&dummyComponent.Start).funcptr ) {
-			
-		//}
-		
-		(cast(Component)t).onComponentAdd(this);
+		(cast(Component)t).bind(this);
+		t.OnComponentAdd();
+		return t;
+	}
+	
+	public T AddComponent(T : Component, Args...)(Args args) {
+		auto t = new T(args);
+		components ~= t;
+		(cast(Component)t).bind(this);
+		t.OnComponentAdd();
 		return t;
 	}
 

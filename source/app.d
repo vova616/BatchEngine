@@ -73,9 +73,12 @@ class GravityMouse  {
 	 mixin ComponentBase;
 
 	 vec3 v = vec3(0,0,0);
-	 static float force = 1000;
+	 static float force = 6.674*10e-6;
 
-	  void Update() {
+	 const m1 = 100000;
+	 const m2 = 100;
+
+	 override void Update() {
 		 auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 
 		
@@ -85,13 +88,11 @@ class GravityMouse  {
 		 auto dir = (mpos - transform.position);
 		 auto dis = (dir.x*dir.x)+(dir.y*dir.y);
 		 dir.normalize();
-		 if (dis > force/10) {
-			 v += dir * (force / dis) * 6.674;
-			 //v.z = 0.01;
+		 if (dis > 1000) {
+			v += dir * ((m1/dis) * m2 * force);
 		 } else {
-			 v += dir * 10 * 6.674;
-			 //v.z = 0.01;
-		 }	
+			v += dir * ((m1/1000) * m2 * force);
+		 }		
 
 		 auto pos = transform.position;
 		 auto bounds = camera.bounds();

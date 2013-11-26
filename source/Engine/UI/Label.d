@@ -5,6 +5,7 @@ import Engine.Batch;
 import Engine.Material;
 import gl3n.linalg;
 import Engine.Font;
+import Engine.Core;
 
 class Label : Component, Batchable {
 	// This will identify our vertex buffer
@@ -41,6 +42,10 @@ class Label : Component, Batchable {
 		batchData = data;
 	}
 
+	override void Awake() {
+		Core.AddBatch(entity, this);
+	}
+	
 	@property int vertecies() {
 		return actualSize*4;	
 	};

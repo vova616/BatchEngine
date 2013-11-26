@@ -34,9 +34,7 @@ public class Core
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;
 		foreach (ref c; entity.components) {
-			auto batch = cast(Batchable)c;
-			if (batch !is null)
-				AddBatch(entity, batch);
+			c.Awake();
 		}
 	}
 

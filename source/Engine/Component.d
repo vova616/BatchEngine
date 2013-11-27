@@ -73,18 +73,18 @@ public class ComponentImpl(T) : Component {
 	this()() {
 		static if (is(T == class)) {
 			component = cast(T)&raw;
-			auto l = T.classinfo.init.length;
+			auto l = raw.length;
 			raw[0..l] = T.classinfo.init[0..l];
 			static if (__traits(compiles, component.__ctor())) {
 				component.__ctor();
 			}
-		}
+		}	
 	}
 
 	this(Args...)(Args args) if (args.length > 0) {
 		static if (is(T == class)) {
 			component = cast(T)&raw;
-			auto l = T.classinfo.init.length;
+			auto l = raw.length;		
 			raw[0..l] = T.classinfo.init[0..l];
 			component.__ctor(args);	
 		} else {	

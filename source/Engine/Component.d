@@ -67,7 +67,7 @@ template ComponentBase()
 public class ComponentImpl(T) : Component {
 	static if (is(T == class)) {
 		private byte[__traits(classInstanceSize, T)] raw;
-	} 	
+	} 		
 	T component;
 
 	this()() {
@@ -75,7 +75,9 @@ public class ComponentImpl(T) : Component {
 			component = cast(T)&raw;
 			auto l = T.classinfo.init.length;
 			raw[0..l] = T.classinfo.init[0..l];
-			component.__ctor();
+			static if (__traits(compiles, component.__ctor())) {
+				component.__ctor();
+			}
 		}
 	}
 

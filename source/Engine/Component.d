@@ -8,14 +8,14 @@ import e = Engine.Entity;
 abstract class Component
 {
 	package bool started;
-	package e.Entity entity_;
+	package e.Entity _entity;
 
 	final @property public e.Entity entity() {
-		return entity_;	
+		return _entity;	
 	};
-	
+
 	final @property public t.Transform transform() {
-		return entity_.transform;
+		return _entity.transform;
 	};
 
 	this()
@@ -24,7 +24,7 @@ abstract class Component
 	}
 
 	final package void bind(e.Entity entity) {
-		this.entity_ = entity;
+		this._entity = entity;
 	};
 
 	public T Cast(T)() {
@@ -53,10 +53,10 @@ abstract class Component
 
 template ComponentBase()
 {
-	immutable(e.Entity) entity_;
-
+	e.Entity _entity;
+	
 	final @property public e.Entity entity() {
-		return cast(e.Entity)entity_;	
+		return _entity;	
 	};
 
 	final @property public t.Transform transform() {
@@ -65,22 +65,27 @@ template ComponentBase()
 }
 
 public class ComponentImpl(T) : Component {
+	static if (is(T == class)) {
+		private byte[__traits(classInstanceSize, T)] raw;
+	} 	
 	T component;
 
 	this()() {
 		static if (is(T == class)) {
-			static if (__traits(compiles, mixin("component = new T();"))) {
-				component = new T();
-			} else {
-				component = cast(T)e.newInstance (T.classinfo);
-			}
+			component = cast(T)&raw;
+			auto l = T.classinfo.init.length;
+			raw[0..l] = T.classinfo.init[0..l];
+			component.__ctor();
 		}
 	}
 
 	this(Args...)(Args args) if (args.length > 0) {
 		static if (is(T == class)) {
-			component = new T(args);
-		} else {
+			component = cast(T)&raw;
+			auto l = T.classinfo.init.length;
+			raw[0..l] = T.classinfo.init[0..l];
+			component.__ctor(args);	
+		} else {	
 			component = T(args);
 		}
 	}
@@ -91,8 +96,8 @@ public class ComponentImpl(T) : Component {
 		} else {
 			return cast(T)&component;
 		}
-	}
-
+	}	
+		
 	static if(hasMember!(T, "Awake"))
 	public override void Awake() {
 		component.Awake();
@@ -109,7 +114,7 @@ public class ComponentImpl(T) : Component {
 	}
 
 	final package void bind(e.Entity entity) {
-		this.entity_ = entity;
-		(cast(e.Entity)component.entity_) = entity;
+		super.bind(entity);
+		(cast(e.Entity)component._entity) = entity;
 	}
 }

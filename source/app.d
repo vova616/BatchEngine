@@ -69,7 +69,7 @@ class MovementSystem : CSystem!(position*) {
 }
 
 
-class GravityMouse  {
+struct GravityMouse  {
 	 mixin ComponentBase;
 
 	 vec3 v = vec3(0,0,0);
@@ -260,6 +260,7 @@ void run() {
 		auto ship = new Entity();
 		ship.AddComponent!(Sprite)(ballTexture);
 		ship.AddComponent!(GravityMouse)();
+
 		//ship.AddComponent(new GameOfLife());
 		Core.AddEntity(ship);
 		ship.transform.scale.x = 10;

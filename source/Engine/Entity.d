@@ -80,14 +80,16 @@ class Entity
 		t.OnComponentAdd();
 		return t;
 	}
-	
+
+
 	public T AddComponent(T : Component, Args...)(Args args) {
-		auto t = new T(args);
+		auto t = new ComponentImpl!(T)(args);
 		components ~= t;
-		(cast(Component)t).bind(this);
+		t.bind(this);
 		t.OnComponentAdd();
-		return t;
+		return t.component;
 	}
+
 
 	public T* AddComponent(T, Args...)(Args args) {
 		auto t = new ComponentImpl!(T)(args);

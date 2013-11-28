@@ -16,6 +16,7 @@ import Engine.Options;
 import Engine.System;
 import Engine.Systems.UpdateSystem;
 import Engine.Systems.AwakeSystem;
+import Engine.Systems.StartSystem;
 
 public class Core
 {	
@@ -77,8 +78,9 @@ public class Core
 		entities.length = 0;
 
 		systems ~= new AwakeSystem();
+		systems ~= new StartSystem();
 		systems ~= new UpdateSystem();
-
+		
 
 
 		DerelictGLFW3.load();

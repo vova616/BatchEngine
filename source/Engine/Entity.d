@@ -95,7 +95,6 @@ class Entity
 		Entity t = new Entity();
 		foreach (ref c ; this.components) {
 			auto newC = c.copy();
-			newC.started = false;
 			t.AddComponent(newC);
 		}
 		return t;

@@ -7,7 +7,6 @@ import e = Engine.Entity;
 
 abstract class Component
 {
-	package bool started;
 	package e.Entity _entity;
 
 	final @property public e.Entity entity() {

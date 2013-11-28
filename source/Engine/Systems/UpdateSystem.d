@@ -9,7 +9,11 @@ import Engine.Systems.SimpleSystem;
 class UpdateSystem : SimpleSystem {
    
 	override bool check(Component c) {
-		return c.hasUpdate;
+		version(LDC) {
+			return true;
+		} else {
+			return c.hasUpdate;
+		}
 	}
 
 	override void process(Component c) {

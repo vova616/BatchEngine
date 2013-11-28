@@ -13,12 +13,16 @@ import Engine.Shader;
 import Engine.Batch;
 import std.parallelism;
 import Engine.Options;
-	
+import Engine.System;
+import Engine.Systems.UpdateSystem;
+import Engine.Systems.AwakeSystem;
+
 public class Core
 {	
 	public static GLFWwindow* window;
 	package static Entity[] entities;
 	package static Batch[] batches;
+	package static System[] systems;
 	public shared static auto width = 800;
 	public shared static auto height = 600;
 	static Camera camera;
@@ -33,8 +37,8 @@ public class Core
 	public static void AddEntity(Entity entity) {
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;
-		foreach (ref c; entity.components) {
-			c.Awake();
+		foreach (s; systems) {
+			s.onEntityEnter(entity);
 		}
 	}
 
@@ -60,6 +64,10 @@ public class Core
 			entity.arrayIndex = -1;
 			entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
 			entities.length--;
+
+			foreach (s; systems) {
+				s.onEntityLeave(entity);
+			}
 		}
 	}
 
@@ -67,6 +75,12 @@ public class Core
 	{
 		entities = new Entity[100];
 		entities.length = 0;
+
+		systems ~= new AwakeSystem();
+		systems ~= new UpdateSystem();
+
+
+
 		DerelictGLFW3.load();
 		DerelictGL3.load();
 	
@@ -107,6 +121,10 @@ public class Core
 		
 		//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		//glLineWidth(5);
+
+		foreach (s; systems) {
+			s.start();
+		}
 	}
 
 	private static void initShaders() {
@@ -189,10 +207,8 @@ public class Core
 			//writeln("START", cast(double)sw.peek().nsecs / 1000000000);
 
 			t1.start();
-			foreach ( e; entities) {
-				foreach ( c; e.components) {
-					c.Update();
-				}
+			foreach (s; systems) {
+				s.process();
 			}
 			t1.stop();
 			//writeln("Update ", cast(double)sw.peek().nsecs / 1000000);

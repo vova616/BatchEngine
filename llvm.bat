@@ -1,1 +1,1 @@
-dub build --compiler=ldmd2 --build=release --config=llvm -v
+dub build --compiler=ldmd2 --build=release --config=build -v

@@ -1,10 +1,10 @@
 {
-	"name": "endine",
-	"description": "An example project skeleton",
-	"homepage": "http://example.org",
-	"copyright": "Copyright © 2000, Your Name",
+	"name": "batch-engine",
+	"description": "An educational 2D Game Engine ECS based.",
+	"homepage": "https://github.com/vova616/BatchEngine",
+	"copyright": "Copyright © 2013, vova616@gmail.com",
 	"authors": [
-		"Your Name"
+		"Vovchik"
 	],
 	"dependencies": {
 		"gl3n": "~master",
@@ -19,7 +19,7 @@
 			"targetType": "executable",
 		},
 		{
-			"name": "llvm",
+			"name": "build",
 			"targetType": "executable",
 			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops","-m32"],
 		},

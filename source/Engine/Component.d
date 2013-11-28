@@ -38,15 +38,15 @@ abstract class Component
 	public void LateUpdate() {};
 
 	final @property public bool hasUpdate() {
-		return ((&Update).ptr != (&Component.Update).ptr);
+		return ((&Update).funcptr != (&Component.Update).funcptr);
 	};
 
 	final @property public bool hasStart() {
-		return ((&Start).ptr != (&Component.Start).ptr);
+		return ((&Start).funcptr != (&Component.Start).funcptr);
 	};
 
 	final @property public bool hasLateUpdate() {
-		return ((&LateUpdate).ptr != (&Component.LateUpdate).ptr);
+		return ((&LateUpdate).funcptr != (&Component.LateUpdate).funcptr);
 	};	
 }
 

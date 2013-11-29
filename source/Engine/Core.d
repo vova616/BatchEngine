@@ -43,6 +43,16 @@ public class Core
 		}
 	}
 
+
+	public static void AddSystem(System s) {
+		systems ~= s;
+		s.start();
+		foreach (e; entities) {
+			s.onEntityEnter(e);
+		}
+	}
+
+
 	public static void AddBatch(Entity entity, Batchable batch) {
 		auto mat = batch.material;
 		foreach(ref b; batches) {

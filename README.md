@@ -4,6 +4,9 @@ I will update both this and GarageEngine when I will decide on the design.
 <br/>
 I cannot promise backwards compatibility at this point and things will change, but the goals and ideas will stay the same.
 
+### Video
+https://www.youtube.com/watch?v=uxigpoS9BZI
+
 ### Goals
 
 - Learn D. :D

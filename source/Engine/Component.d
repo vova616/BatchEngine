@@ -27,7 +27,15 @@ abstract class Component
 	};
 
 	public T Cast(T)() {
-		return cast(T)this;
+		static if (is(T == class)) {
+			auto t = cast(T)this;
+			if (t)
+				return t;
+		}	
+		auto cit = cast(ComponentImpl!T)this;
+		if (cit)
+			return cit.Cast!T();
+		return null;
 	}
 
 	public void OnComponentAdd() {};
@@ -91,7 +99,7 @@ public class ComponentImpl(T) : Component {
 		}
 	}
 
-	public override T Cast(T)() {
+	public T Cast(T)() {
 		static if (is(T == class)) {
 			return cast(T)component;
 		} else {

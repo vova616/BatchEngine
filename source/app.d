@@ -17,30 +17,71 @@ Shader shader;
 Camera camera; 
 Texture ballTexture;
 
+import std.parallelism;
 
-struct GravityMouse  {
+class GravitySystem : System {
+    GravityMouse[] components;
+
+    override void start() {
+        components = new GravityMouse[1000];
+        components.length = 0;    
+    }
+
+    override void process() {
+		auto bounds = camera.bounds();
+		auto mpos = vec3(camera.MouseWorldPosition(),0);
+		auto delta = Core.DeltaTime;
+		auto force = GravityMouse.force;
+        foreach(c ; parallel(components)) {
+           c.Step(mpos,force,delta,bounds);
+        }
+    } 
+
+    override void onEntityEnter(Entity e) {
+        foreach(c ; e.Components) {
+            auto g = (cast(Component)c).Cast!GravityMouse();
+			if (g)
+				components ~= g;
+        }
+    }
+	override void onEntityLeave(Entity e) {
+		for(int i=0;i<components.length;) {
+            if (components[i].entity == e)
+			{
+				components[i] = components[components.length-1];
+				components.length--;
+			}
+			i++;
+        }
+    }
+}
+
+class GravityMouse  {
 	 mixin ComponentBase;
-
 	 vec3 v = vec3(0,0,0);
-	 static float force = 6.674*10e-6;
+	 static shared float force = 6.674*10e-6;
 
 	 enum m1 = 100000;
 	 enum m2 = 100;
-	
 			
-	 void Update() {
-		 auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
+	 void _Update() {
+		 auto bounds = camera.bounds();
+		 auto mpos = vec3(camera.MouseWorldPosition(),0);
+		 auto delta = Core.DeltaTime;
+		 Step(mpos,force,delta,bounds);
+	 }
+
+	 void Step(vec3 mpos, float mforce, float delta, recti bounds) {
 		 auto dir = (mpos - transform.position);
 		 auto dis = (dir.x*dir.x)+(dir.y*dir.y);
 		 dir.normalize();
 		 if (dis > 1000) {
-			v += dir * ((m1/dis) * m2 * force);
+			v += dir * ((m1/dis) * m2 * mforce);
 		 } else {
-			v += dir * ((m1/1000) * m2 * force);
+			v += dir * ((m1/1000) * m2 * mforce);
 		 }		
 
 		 auto pos = transform.position;
-		 auto bounds = camera.bounds();
 		 auto min = bounds.min;
 		 auto max = bounds.max;
 
@@ -60,7 +101,7 @@ struct GravityMouse  {
 		 }
 		 transform.position = pos;
 
-		 transform.position += v  * cast(float)Core.DeltaTime;
+		 transform.position += v  * delta;
 		 auto sprite = entity.sprite;
 		 auto v2 = v;
 		 if (v2.x < 0) v2.x = -v2.x;
@@ -136,26 +177,25 @@ void run() {
 	ballTexture = new Texture("./public/sprite.png\0");
 	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
+	Core.AddSystem(new GravitySystem());
 
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
 	
 			
-	for (int i=0;i<10000;i++) {
-		auto ship = new Entity();
-		ship.AddComponent!(Sprite)(ballTexture);
-		ship.AddComponent!(GravityMouse)();
-		Core.AddEntity(ship);
-		ship.transform.scale.x = 10;
-		ship.transform.scale.y = 10;
-		ship.transform.rotation = vec3(0,0,0);
-		ship.name = to!string(i);
-		ship.transform.position = vec3((i*2)%Core.width,((i/Core.width)*10)%Core.height,0);
-		ship.transform.scale = vec3(4, 4, 1);
+	for (int x=0;x<Core.width/4;x++) {
+		for (int y=0;y<Core.height/5;y++) {
+			auto ship = new Entity();
+			ship.AddComponent!(Sprite)(ballTexture);
+			ship.AddComponent!(GravityMouse)();
+			ship.name = to!string(x);
+			ship.transform.position = vec3(x*4,y*5,0);
+			ship.transform.scale = vec3(4, 4, 1);
+			Core.AddEntity(ship);
+		}
 	}
-	
-	
+
 	for (int i=0;i<10;i++) {
 		auto e2 = new Entity();
 		e2.transform.scale.x = 32;
@@ -188,7 +228,7 @@ void run() {
 			time += Core.DeltaTime;
 			frames++;
 			if (time >= 1) {
-				fps.SetText("FPS: " ~ to!string(frames) ~ " GameObjects:" ~ to!string(Core.EntitiesCount) );
+				fps.SetText("FPS: " ~ to!string(frames) ~ " Entities:" ~ to!string(Core.EntitiesCount) );
 				writeln(to!string(frames));
 				time -= 1;
 				frames = 0;

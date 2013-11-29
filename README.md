@@ -74,10 +74,10 @@ Here is the same component written in 3 different ways.
 	
 	...
 	auto entity = new Entity();
-	ship.AddComponent!(Gravity)();
+	entity.AddComponent!(Gravity)();
 	//or
-	ship.AddComponent(new Gravity());
-	Core.AddEntity(cam);
+	entity.AddComponent(new Gravity());
+	Core.AddEntity(entity);
 	
 ### Dependencies
 -	gl3n

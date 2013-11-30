@@ -1,9 +1,9 @@
 {
 	"name": "batch-engine",
 	"description": "An educational 2D Game Engine ECS based.",
+	"license": "MIT",
 	"homepage": "https://github.com/vova616/BatchEngine",
 	"copyright": "Copyright © 2013, vova616@gmail.com",
-	"license": "MIT",
 	"authors": [
 		"Vovchik"
 	],

@@ -185,7 +185,6 @@ void run() {
 					
 	float entities = 100000/3;
 	float m = sqrt(entities/(Core.width*Core.height));
-	writeln(m," ", Core.width*m*Core.height*m);
 	for (int x=0;x<Core.width*m;x++) {
 		for (int y=0;y<Core.height*m;y++) {
 			auto ship = new Entity();

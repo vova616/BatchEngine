@@ -22,7 +22,7 @@
 		{
 			"name": "build",
 			"targetType": "executable",
-			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops","-m32"],
+			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops"],
 		},
 	]
 }

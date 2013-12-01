@@ -182,15 +182,17 @@ void run() {
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
-	
-			
-	for (int x=0;x<Core.width/4;x++) {
-		for (int y=0;y<Core.height/5;y++) {
+					
+	float entities = 100000/3;
+	float m = sqrt(entities/(Core.width*Core.height));
+	writeln(m," ", Core.width*m*Core.height*m);
+	for (int x=0;x<Core.width*m;x++) {
+		for (int y=0;y<Core.height*m;y++) {
 			auto ship = new Entity();
 			ship.AddComponent!(Sprite)(ballTexture);
 			ship.AddComponent!(GravityMouse)();
 			ship.name = to!string(x);
-			ship.transform.position = vec3(x*4,y*5,0);
+			ship.transform.position = vec3(x/m,y/m,0);
 			ship.transform.scale = vec3(4, 4, 1);
 			Core.AddEntity(ship);
 		}

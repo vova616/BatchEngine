@@ -26,9 +26,13 @@ abstract class Component
 		this._entity = entity;
 	};
 		
-	pure T Cast(T)() if (is(T == class)) {
-		return cast(T)component;
-	}	
+	public T Cast(T)() if (is(T == class)) {
+		auto cit = cast(ComponentImpl!T)this;
+		if (cit)
+			return cit.Cast!T();
+		else 
+			return cast(T)this;	
+	}		
 
 	public auto Cast(T)() if (is(T == struct)) {
 		auto cit = cast(ComponentImpl!T)this;
@@ -42,7 +46,7 @@ abstract class Component
 		if (cit)
 			return cit.Cast!T();
 		return null;
-	}	
+	}		
 		
 
 	public void OnComponentAdd() {};
@@ -61,7 +65,7 @@ abstract class Component
 
 	final @property public bool hasLateUpdate() {
 		return ((&LateUpdate).funcptr != (&Component.LateUpdate).funcptr);
-	};	
+	};
 }
 
 
@@ -109,7 +113,7 @@ public class ComponentImpl(T) : Component {
 	pure T Cast(T)() if (is(T == class)) {
 		return cast(T)component;
 	}	
-		
+
 	public auto Cast(T)() if (is(T == struct)) {
 		static if (__traits(compiles, cast(T)&component))
 			return cast(T)&component;

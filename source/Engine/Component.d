@@ -25,18 +25,25 @@ abstract class Component
 	final package void bind(e.Entity entity) {
 		this._entity = entity;
 	};
+		
+	pure T Cast(T)() if (is(T == class)) {
+		return cast(T)component;
+	}	
 
-	public T Cast(T)() {
-		static if (is(T == class)) {
-			auto t = cast(T)this;
-			if (t)
-				return t;
-		}	
+	public auto Cast(T)() if (is(T == struct)) {
 		auto cit = cast(ComponentImpl!T)this;
 		if (cit)
 			return cit.Cast!T();
 		return null;
-	}
+	}	
+
+	public auto Cast(T : T*)() if (is(T == struct)) {
+		auto cit = cast(ComponentImpl!T)this;
+		if (cit)
+			return cit.Cast!T();
+		return null;
+	}	
+		
 
 	public void OnComponentAdd() {};
 	public void Awake() {};
@@ -99,12 +106,15 @@ public class ComponentImpl(T) : Component {
 		}
 	}
 
-	public T Cast(T)() {
-		static if (is(T == class)) {
-			return cast(T)component;
-		} else {
+	pure T Cast(T)() if (is(T == class)) {
+		return cast(T)component;
+	}	
+		
+	public auto Cast(T)() if (is(T == struct)) {
+		static if (__traits(compiles, cast(T)&component))
 			return cast(T)&component;
-		}
+		else
+			return cast(T*)&component;
 	}	
 		
 	static if(hasMember!(T, "Awake"))

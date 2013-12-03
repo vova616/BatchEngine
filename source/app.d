@@ -19,15 +19,32 @@ Texture ballTexture;
 
 import std.parallelism;
 
+class LifeController : Component {
+	Life life;
+
+	override void Awake() {
+		life = entity.GetComponent!Life();
+		writeln(life is null);
+	}
+
+	override void Update() {
+		if (Input.KeyPressDown(Key.MOUSE_BUTTON_1)) {
+			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
+			auto dir = (transform.position - mpos).xy;
+			dir.normalize();
+			life.Push(dir.xy, 10f);
+		}	
+	}
+}
+
 class Life : Component {
 	Energy energy;
 
-	vec2 velocity;
+	vec2 velocity = vec2(0,0);
 
 
-	this(Energy energy) {
-		this.energy = energy;
-		this.velocity = vec2(0,0);
+	override void Awake() {
+		energy = entity.GetComponent!Energy();
 	}
 
 	void Push(vec2 dir, float force) {
@@ -35,14 +52,6 @@ class Life : Component {
 	}
 
 	override void Update() {
-
-		if (Input.KeyPressDown(Key.MOUSE_BUTTON_1)) {
-			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
-			auto dir = (transform.position - mpos).xy;
-			dir.normalize();
-			Push(dir.xy, 10f);
-		}
-
 		transform.position += vec3(velocity,0) * Core.DeltaTime;
 	}
 }
@@ -137,7 +146,8 @@ void run() {
 	auto player = new Entity();
 	player.AddComponent!(Sprite)(ballTexture);
 	auto energy = player.AddComponent!(Energy)(35);
-	player.AddComponent!(Life)(energy);
+	player.AddComponent!(Life)();
+	player.AddComponent!(LifeController)();
 	player.transform.position = camera.transform.position;
 	player.sprite.color = vec4(1,0,0,1);
 	Core.AddEntity(player);

@@ -108,11 +108,8 @@ class BBTree : Tree
         }
 	}
 
-	int bbChecks = 0;
-
 	void LeafQuery()(Node *subtree, Node *leaf, SpatialIndexQueryFunc func)
 	{
-		bbChecks++;
         if(rect.Intersects(leaf.bb, subtree.bb)){
 			if(subtree.NodeIsLeaf()) {
 				if (func !is null) {

@@ -35,7 +35,8 @@ class CollisionSystem : System {
 	ulong checkCollision(Indexable a,Indexable b, ulong collisionID) {
 		auto ac = cast(Collider)a;
 		auto bc = cast(Collider)b;
-		writeln(ac.entity.name, " collides ", bc.entity.name);
+		if (ac.Collide(bc))
+			writeln(ac.entity.name, " collides ", bc.entity.name);
 		return 0;
 	}
 
@@ -66,7 +67,7 @@ struct CollisionData {
 class Collider : Component, Indexable {
 	enum Type {
 		Box,
-		Sphere,
+		Circle,
 	}
 
 	abstract @property Type type();
@@ -96,11 +97,46 @@ class BoxCollider : Collider {
 	public override bool Collide(Collider collider) {
 		if (collider.type() == Type.Box) {
 			return BB.Intersects(BB(),collider.BB());
+		} else {
+			assert(0);
 		}
 		return false;
 	}
 }
 
+class CircleCollider : Collider {
+	float radius;
+
+	override void Awake() {
+		if (transform.scale.x > transform.scale.y)
+			radius = transform.scale.x/2f;
+		else 
+			radius = transform.scale.y/2f;
+	}
+
+	override @property Type type() {
+		return Type.Circle;
+	}
+
+	public override rect BB() {
+		auto bc = rect(vec2(-radius,-radius),vec2(radius,radius));
+		bc.add(transform.position.xy);
+		return bc;
+	}
+
+	public override bool Collide(Collider collider) {
+		if (collider.type() == Type.Circle) {
+			auto c = cast(CircleCollider)collider;
+			auto dp = (c.transform.position.xy-transform.position.xy);
+			if (dp.x*dp.x + dp.y*dp.y <= (c.radius+radius)*(c.radius+radius)) {
+				return true;
+			}
+		} else {
+			assert(0);
+		}
+		return false;
+	}
+}
 
 class LifeController : Component {
 	Life life;
@@ -135,6 +171,26 @@ class Life : Component {
 	}
 
 	override void Update() {
+		auto pos = transform.position;
+		auto bounds = camera.bounds();
+		auto min = bounds.min;
+		auto max = bounds.max;
+	
+		if (pos.x < min.x) {
+			velocity.x = -velocity.x;
+			pos.x = min.x;
+		} else if (pos.x > max.x) {
+			velocity.x = -velocity.x;
+			pos.x = max.x;
+		}
+		if (pos.y < min.y) {
+			velocity.y = -velocity.y;
+			pos.y = min.y;
+		} else if (pos.y > max.y) {
+			velocity.y = -velocity.y;
+			pos.y = max.y;
+		}
+		transform.position = pos;
 		transform.position += vec3(velocity,0) * Core.DeltaTime;
 	}
 }
@@ -195,7 +251,7 @@ void run() {
 	Core.Start();
 
 	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
-	ballTexture = new Texture("./public/sprite.png\0");
+	ballTexture = new Texture("./public/sprite2.png\0");
 	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
 	//Core.AddSystem(new GravitySystem());
@@ -205,13 +261,13 @@ void run() {
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
 					
-	float entities = 10;
+	float entities = 20;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {
 		for (int y=0;y<Core.height*m;y++) {
 			auto ship = new Entity();
 			ship.AddComponent!(Sprite)(ballTexture);
-			ship.AddComponent!(BoxCollider)();
+			ship.AddComponent!(CircleCollider)();
 			ship.name = to!string(x) ~ " " ~ to!string(y);
 			ship.transform.position = vec3(x/m,y/m,0);
 			ship.transform.scale = vec3(50, 50, 1);
@@ -229,10 +285,10 @@ void run() {
 
 	auto player = new Entity();
 	player.AddComponent!(Sprite)(ballTexture);
-	auto energy = player.AddComponent!(Energy)(35);
+	auto energy = player.AddComponent!(Energy)(60);
 	player.AddComponent!(Life)();
 	player.AddComponent!(LifeController)();
-	player.AddComponent!(BoxCollider)();
+	player.AddComponent!(CircleCollider)();
 	player.name = "Player";
 
 	player.transform.position = camera.transform.position;

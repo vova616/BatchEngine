@@ -28,15 +28,16 @@ class CollisionSystem : System {
     }
 
     override void process() {
-		
         tree.ReindexQuery(&checkCollision);
     } 
 
 	ulong checkCollision(Indexable a,Indexable b, ulong collisionID) {
 		auto ac = cast(Collider)a;
 		auto bc = cast(Collider)b;
-		if (ac.Collide(bc))
-			writeln(ac.entity.name, " collides ", bc.entity.name);
+		if (ac.Collide(bc)) {
+			ac.entity.SendMessage("OnCollision", cast(void*)bc);
+			bc.entity.SendMessage("OnCollision", cast(void*)ac);
+		}
 		return 0;
 	}
 
@@ -107,7 +108,7 @@ class BoxCollider : Collider {
 class CircleCollider : Collider {
 	float radius;
 
-	override void Awake() {
+	override void Update() {
 		if (transform.scale.x > transform.scale.y)
 			radius = transform.scale.x/2f;
 		else 
@@ -151,31 +152,19 @@ class LifeController : Component {
 			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 			auto dir = (transform.position - mpos).xy;
 			dir.normalize();
-			life.Push(dir.xy, 10f);
+			life.Push(dir.xy, 100f);
 		}	
 	}
 }
 
-class Life : Component {
-	Energy energy;
-
+class Rigidbody : Component {
 	vec2 velocity = vec2(0,0);
-
-
-	override void Awake() {
-		energy = entity.GetComponent!Energy();
-	}
-
-	void Push(vec2 dir, float force) {
-		velocity += dir * force;
-	}
 
 	override void Update() {
 		auto pos = transform.position;
 		auto bounds = camera.bounds();
 		auto min = bounds.min;
 		auto max = bounds.max;
-	
 		if (pos.x < min.x) {
 			velocity.x = -velocity.x;
 			pos.x = min.x;
@@ -195,20 +184,73 @@ class Life : Component {
 	}
 }
 
+class Life : Component {
+	Energy energy;
+	Rigidbody rigidbody;
+
+	override void Awake() {
+		energy = entity.GetComponent!Energy();
+		rigidbody = entity.GetComponent!Rigidbody();
+	}
+
+	void Push(vec2 dir, float force) {
+		auto e = energy.energy*0.05f;
+		energy.AddEnergy(-e);
+
+		auto ball = new Entity();
+		ball.AddComponent!(Sprite)(ballTexture);
+		auto en = ball.AddComponent!(Energy)(e);
+		ball.AddComponent!(CircleCollider)();
+		auto rigid = ball.AddComponent!(Rigidbody)();
+		ball.transform.position = transform.position + ((energy.Size()/2f)+en.Size()/2f) * vec3(-dir,0);
+		ball.sprite.color = vec4(1,0,0,1);
+		ball.AddComponent!(Life)();
+		Core.AddEntity(ball);
+
+		rigid.velocity = -dir * force;
+		rigidbody.velocity += dir * (force/10f);
+		
+	}
+
+	override void OnMessage(string op, void* arg) {
+		if (op == "OnCollision") {
+			Collider c = cast(Collider)arg;
+			auto e = c.entity.GetComponent!Energy();
+			if (e) {
+				if (energy.energy > e.energy) {
+					if (e.energy > 0) {
+						e.AddEnergy(-1f);
+						energy.AddEnergy(1f);
+					}
+				}
+			}
+		}
+	}
+}
+
 class Energy : Component {
 	float energy;
 	float sizeRatio = 1;
 
-	this(float energy) {
+	this(float energy, float ratio = 1.5f) {
 		this.energy = energy;
+		this.sizeRatio = ratio;
 	}
 
 	override void Awake() {
 		SetEnergy(energy);
 	}
 
+	void AddEnergy(float energy) {
+		SetEnergy(this.energy + energy);
+	}
+
 	void SetEnergy(float energy) {
 		this.energy = energy;
+		if (this.energy <= 0) {
+			this.energy = 0;
+			Core.RemoveEntity(this.entity);
+		}
 		auto size = Size();
 		transform.scale = vec3(size,size,size);
 	}
@@ -268,9 +310,10 @@ void run() {
 			auto ship = new Entity();
 			ship.AddComponent!(Sprite)(ballTexture);
 			ship.AddComponent!(CircleCollider)();
+			ship.AddComponent!(Life)();
 			ship.name = to!string(x) ~ " " ~ to!string(y);
 			ship.transform.position = vec3(x/m,y/m,0);
-			ship.transform.scale = vec3(50, 50, 1);
+			ship.AddComponent!(Energy)(20);
 			Core.AddEntity(ship);
 		}
 	}
@@ -289,6 +332,7 @@ void run() {
 	player.AddComponent!(Life)();
 	player.AddComponent!(LifeController)();
 	player.AddComponent!(CircleCollider)();
+	player.AddComponent!(Rigidbody)();
 	player.name = "Player";
 
 	player.transform.position = camera.transform.position;

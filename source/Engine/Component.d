@@ -4,6 +4,8 @@ module Engine.Component;
 import t = Engine.Transform;
 import std.traits;
 import e = Engine.Entity;
+import std.traits;
+import std.typetuple;
 
 abstract class Component
 {
@@ -27,13 +29,16 @@ abstract class Component
 	};
 		
 	public T Cast(T)() if (is(T == class)) {
-		auto cit = cast(ComponentImpl!T)this;
-		if (cit)
-			return cit.Cast!T();
-		else 
-			return cast(T)this;	
-	}		
+		auto tptr = cast(T)Cast(typeid(T));
+		if (tptr)	
+			return tptr;
+		return cast(T)this;			
+	}	
 
+	public void* Cast(TypeInfo targetType) {
+		return null;
+	}		
+	
 	public auto Cast(T)() if (is(T == struct)) {
 		auto cit = cast(ComponentImpl!T)this;
 		if (cit)
@@ -71,6 +76,7 @@ abstract class Component
 
 template ComponentBase()
 {
+	
 	e.Entity _entity;
 	
 	final @property public e.Entity entity() {
@@ -83,6 +89,7 @@ template ComponentBase()
 }
 
 public class ComponentImpl(T) : Component {
+
 	static if (is(T == class)) {
 		private byte[__traits(classInstanceSize, T)] raw;
 	} 		
@@ -140,4 +147,30 @@ public class ComponentImpl(T) : Component {
 		super.bind(entity);
 		(cast(e.Entity)component._entity) = entity;
 	}
+
+	static if(is(T == class))
+    public override void* Cast(TypeInfo targetType)
+    {
+		alias TypeTuple!(T, ImplicitConversionTargets!T) AllTypes;
+		foreach (F ; AllTypes)
+		{
+			if (targetType != typeid(F) &&
+				targetType != typeid(const(F)))
+			{
+				static if (isImplicitlyConvertible!(F, immutable(F)))
+				{
+					if (targetType != typeid(immutable(F)))
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+			}
+			return cast(void*)cast(F)component;
+		}
+		return null;
+    }
 }

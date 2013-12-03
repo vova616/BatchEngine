@@ -11,13 +11,96 @@ import Engine.UI.all;
 import std.math;
 import std.variant;
 import Engine.math;
-
+import Engine.Systems.SimpleSystem;
+import Engine.Tree.BBTree;
 
 Shader shader;
 Camera camera; 
 Texture ballTexture;
 
 import std.parallelism;
+
+class CollisionSystem : System {
+	BBTree tree = new BBTree(null);
+
+    override void start() {
+          
+    }
+
+    override void process() {
+		
+        tree.ReindexQuery(&checkCollision);
+    } 
+
+	ulong checkCollision(Indexable a,Indexable b, ulong collisionID) {
+		auto ac = cast(Collider)a;
+		auto bc = cast(Collider)b;
+		writeln(ac.entity.name, " collides ", bc.entity.name);
+		return 0;
+	}
+
+    override void onEntityEnter(Entity e) {
+        foreach(c2 ; e.Components) {
+            auto c = cast(Component)c2;
+            auto collider = c.Cast!Collider();
+			if (collider !is null) {
+				tree.Insert(collider);
+			}
+        }
+    }
+
+	override void onEntityLeave(Entity e) {
+		
+    }
+}
+
+
+struct CollisionData {
+	public:
+		vec2 point;
+		vec2 normal;
+		Entity a;
+		Entity b;
+}
+
+class Collider : Component, Indexable {
+	enum Type {
+		Box,
+		Sphere,
+	}
+
+	abstract @property Type type();
+	rect BB() {
+		return rect();
+	}
+	abstract bool Collide(Collider collider);
+}
+
+class BoxCollider : Collider {
+	rect bb;
+	
+	override void Awake() {
+		bb = rect(transform.scale.x,transform.scale.y);
+	}
+
+	override @property Type type() {
+		return Type.Box;
+	}
+
+	public override rect BB() {
+		auto bc = bb;
+		bc.add(transform.position.xy);
+		return bc;
+	}
+
+	public override bool Collide(Collider collider) {
+		if (collider.type() == Type.Box) {
+			return BB.Intersects(BB(),collider.BB());
+		}
+		return false;
+	}
+}
+
 
 class LifeController : Component {
 	Life life;
@@ -116,6 +199,7 @@ void run() {
 	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
 	//Core.AddSystem(new GravitySystem());
+	Core.AddSystem(new CollisionSystem());
 
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
@@ -127,13 +211,13 @@ void run() {
 		for (int y=0;y<Core.height*m;y++) {
 			auto ship = new Entity();
 			ship.AddComponent!(Sprite)(ballTexture);
-			ship.name = to!string(x);
+			ship.AddComponent!(BoxCollider)();
+			ship.name = to!string(x) ~ " " ~ to!string(y);
 			ship.transform.position = vec3(x/m,y/m,0);
 			ship.transform.scale = vec3(50, 50, 1);
 			Core.AddEntity(ship);
 		}
 	}
-	
 
 	auto cam = new Entity();
 	camera = cam.AddComponent(new Camera());
@@ -148,6 +232,9 @@ void run() {
 	auto energy = player.AddComponent!(Energy)(35);
 	player.AddComponent!(Life)();
 	player.AddComponent!(LifeController)();
+	player.AddComponent!(BoxCollider)();
+	player.name = "Player";
+
 	player.transform.position = camera.transform.position;
 	player.sprite.color = vec4(1,0,0,1);
 	Core.AddEntity(player);

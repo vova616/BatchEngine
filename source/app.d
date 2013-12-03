@@ -19,101 +19,61 @@ Texture ballTexture;
 
 import std.parallelism;
 
-class GravitySystem : System {
-    GravityMouse[] components;
+class Life : Component {
+	Energy energy;
 
-    override void start() {
-        components = new GravityMouse[1000];
-        components.length = 0;    
-    }
+	vec2 velocity;
 
-    override void process() {
-		auto bounds = camera.bounds();
-		auto mpos = vec3(camera.MouseWorldPosition(),0);
-		auto delta = Core.DeltaTime;
-		auto force = GravityMouse.force;
-        foreach(c ; parallel(components)) {
-           c.Step(mpos,force,delta,bounds);
-        }
-    } 
 
-    override void onEntityEnter(Entity e) {
-        foreach(c ; e.Components) {
-            auto g = (cast(Component)c).Cast!GravityMouse();
-			if (g)
-				components ~= g;
-        }
-    }
-	override void onEntityLeave(Entity e) {
-		for(int i=0;i<components.length;) {
-            if (components[i].entity == e)
-			{
-				components[i] = components[components.length-1];
-				components.length--;
-			}
-			i++;
-        }
-    }
+	this(Energy energy) {
+		this.energy = energy;
+		this.velocity = vec2(0,0);
+	}
+
+	void Push(vec2 dir, float force) {
+		velocity += dir * force;
+	}
+
+	override void Update() {
+
+		if (Input.KeyPressDown(Key.MOUSE_BUTTON_1)) {
+			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
+			auto dir = (transform.position - mpos).xy;
+			dir.normalize();
+			Push(dir.xy, 10f);
+		}
+
+		transform.position += vec3(velocity,0) * Core.DeltaTime;
+	}
 }
 
-class GravityMouse  {
-	 mixin ComponentBase;
-	 vec3 v = vec3(0,0,0);
-	 static shared float force = 6.674*10e-6;
+class Energy : Component {
+	float energy;
+	float sizeRatio = 1;
 
-	 enum m1 = 100000;
-	 enum m2 = 100;
-			
-	 void _Update() {
-		 auto bounds = camera.bounds();
-		 auto mpos = vec3(camera.MouseWorldPosition(),0);
-		 auto delta = Core.DeltaTime;
-		 Step(mpos,force,delta,bounds);
-	 }
+	this(float energy) {
+		this.energy = energy;
+	}
 
-	 void Step(vec3 mpos, float mforce, float delta, recti bounds) {
-		 auto dir = (mpos - transform.position);
-		 auto dis = (dir.x*dir.x)+(dir.y*dir.y);
-		 dir.normalize();
-		 if (dis > 1000) {
-			v += dir * ((m1/dis) * m2 * mforce);
-		 } else {
-			v += dir * ((m1/1000) * m2 * mforce);
-		 }		
+	override void Awake() {
+		SetEnergy(energy);
+	}
 
-		 auto pos = transform.position;
-		 auto min = bounds.min;
-		 auto max = bounds.max;
+	void SetEnergy(float energy) {
+		this.energy = energy;
+		auto size = Size();
+		transform.scale = vec3(size,size,size);
+	}
 
-		 if (pos.x < min.x) {
-			 v.x = -v.x/8;
-			 pos.x = min.x;
-		 } else if (pos.x > max.x) {
-			 v.x = -v.x/8;
-			 pos.x = max.x;
-		 }
-		 if (pos.y < min.y) {
-			 v.y = -v.y/8;
-			 pos.y = min.y;
-		 } else if (pos.y > max.y) {
-			 v.y = -v.y/8;
-			 pos.y = max.y;
-		 }
-		 transform.position = pos;
-
-		 transform.position += v  * delta;
-		 auto sprite = entity.sprite;
-		 auto v2 = v;
-		 if (v2.x < 0) v2.x = -v2.x;
-		 if (v2.y < 0) v2.y = -v2.y;
-
-		 if (sprite !is null) {
-			 sprite.color = vec4((v2.y+2*v2.x)/50, v2.x/50,v2.y/60,1);
-		 } //else {
-			// transform.rotation.z = atan2(v.x, v.y) * 180f/PI;
-		// transform.scale.x = (v2.x+v2.y)/20 + 5;
-		// transform.scale.y = transform.scale.x;
-	 }
+	void SetSizeRatio(float sizeRatio) {
+		this.sizeRatio = sizeRatio;
+		auto size = Size();
+		transform.scale = vec3(size,size,size);
+	}
+		
+	float Size() {
+		return energy * sizeRatio;
+	}
 }
 
 class InputHandle : Component {
@@ -125,37 +85,6 @@ class InputHandle : Component {
 		if (Input.MouseScroll().y < 0) {
 			Core.camera.size -= 3*Core.DeltaTime;
 			Core.camera.UpdateResolution();
-		}
-		if (Input.KeyDown(Key.A)) {
-			Core.camera.transform.rotation.y = Core.camera.transform.rotation.y - Core.DeltaTime;
-		}
-		if (Input.KeyDown(Key.S)) {
-			Core.camera.transform.rotation.y = Core.camera.transform.rotation.y - Core.DeltaTime;
-		}
-		if (Input.KeyDown(Key.E)) {
-			GravityMouse.force += GravityMouse.force*Core.DeltaTime*2;
-		}	
-		if (Input.KeyDown(Key.R)) {
-			GravityMouse.force -= GravityMouse.force*Core.DeltaTime*2;
-		}
-		if (Input.KeyDown(Key.MOUSE_BUTTON_1)) {
-		{
-			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
-			for (int i=0;i<20;i++) {
-				auto ship = new Entity();
-				ship.AddComponent!(Sprite)(ballTexture);
-				ship.AddComponent!GravityMouse();
-				//ship.AddComponent(new GameOfLife());
-				Core.AddEntity(ship);
-				ship.transform.scale.x = 10;
-				ship.transform.scale.y = 10;
-				ship.transform.rotation = vec3(0,0,0);
-				ship.transform.position = mpos + vec3(-5+i/2,-5+i/2,0) ;
-				//ship.transform.position += vec3(0,10000,0);
-				//ship.transform.position = vec3(uniform(0,Core.width),uniform(0,Core.height),0);
-				ship.transform.scale = vec3(4, 4, 1);
-			}		
-		}
 		}
 	}
 }
@@ -177,35 +106,25 @@ void run() {
 	ballTexture = new Texture("./public/sprite.png\0");
 	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
-	Core.AddSystem(new GravitySystem());
+	//Core.AddSystem(new GravitySystem());
 
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
 					
-	float entities = 100000/3;
+	float entities = 10;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {
 		for (int y=0;y<Core.height*m;y++) {
 			auto ship = new Entity();
 			ship.AddComponent!(Sprite)(ballTexture);
-			ship.AddComponent!(GravityMouse)();
 			ship.name = to!string(x);
 			ship.transform.position = vec3(x/m,y/m,0);
-			ship.transform.scale = vec3(4, 4, 1);
+			ship.transform.scale = vec3(50, 50, 1);
 			Core.AddEntity(ship);
 		}
 	}
-
-	for (int i=0;i<10;i++) {
-		auto e2 = new Entity();
-		e2.transform.scale.x = 32;
-		e2.transform.scale.y = 32;
-		e2.AddComponent!GravityMouse();
-		e2.transform.position = vec3(((i%100)*10)%Core.width,(i*25)%Core.height,0);
-		e2.AddComponent!Label(t,to!string(i));
-		Core.AddEntity(e2);	
-	}
+	
 
 	auto cam = new Entity();
 	camera = cam.AddComponent(new Camera());
@@ -214,6 +133,14 @@ void run() {
 	Core.camera = cam.GetComponent!Camera();
 
 	cam.transform.position = vec3(Core.width/2,+Core.height/2,0);
+
+	auto player = new Entity();
+	player.AddComponent!(Sprite)(ballTexture);
+	auto energy = player.AddComponent!(Energy)(35);
+	player.AddComponent!(Life)(energy);
+	player.transform.position = camera.transform.position;
+	player.sprite.color = vec4(1,0,0,1);
+	Core.AddEntity(player);
 	
 	auto e3 = new Entity();
 	e3.transform.scale.x = 32;
@@ -229,7 +156,7 @@ void run() {
 			time += Core.DeltaTime;
 			frames++;
 			if (time >= 1) {
-				fps.SetText("FPS: " ~ to!string(frames) ~ " Entities:" ~ to!string(Core.EntitiesCount) );
+				fps.SetText("FPS: " ~ to!string(frames));
 				writeln(to!string(frames));
 				time -= 1;
 				frames = 0;
@@ -242,31 +169,6 @@ void run() {
 			Coroutine.yield();
 		}
 	});
-	/*
-	StartCoroutine( {
-		auto sprite = mmouse.GetComponent!Sprite();
-		auto dTexture = new DynamicTexture(sprite.material.texture);
-		float t = 0;
-		while (true) {
-			if (sprite.color.r > 1)
-				sprite.color.r = 0;
-
-			alias Vector!(ubyte,4) color;
-
-			dTexture.Update!(color)((pixels){
-				for (int i=0;i<pixels.length;i++) {
-					pixels[i].r = cast(ubyte)(i + t);
-					pixels[i].g = cast(ubyte)(i + t);
-					pixels[i].b = 0xff;
-					pixels[i].a = 0xff;
-				}
-			});
-			t += Core.DeltaTime*1000;
-			//sprite.color.r += 0.1;
-			Coroutine.yield();
-		}
-	});
-	*/
 
 	Core.Run();
 }

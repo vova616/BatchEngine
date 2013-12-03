@@ -69,8 +69,8 @@ alias Rect!(float) rect;
 
 struct Rect(T) {
 	alias Vector!(T, 2) vectp;
-	vectp min;
-	vectp max;
+	vectp min = vectp(0,0);
+	vectp max = vectp(0,0);
 
 	static Rect Zero = Rect();
 

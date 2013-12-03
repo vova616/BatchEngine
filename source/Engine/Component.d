@@ -60,6 +60,10 @@ abstract class Component
 	public void Update() {};
 	public void LateUpdate() {};
 
+	public void OnMessage(string op, void* arg) {
+
+	}
+
 	final @property public bool hasUpdate() {
 		return ((&Update).funcptr != (&Component.Update).funcptr);
 	};
@@ -128,10 +132,15 @@ public class ComponentImpl(T) : Component {
 			return cast(T*)&component;
 	}	
 		
-	static if(hasMember!(T, "Awake"))
-	public override void Awake() {
-		component.Awake();
+	static if(hasMember!(T, "OnMessage"))
+	public override void OnMessage(string op, void* arg) {
+		component.OnMessage(op,arg);
 	}
+
+	static if(hasMember!(T, "Awake"))
+		public override void Awake() {
+			component.Awake();
+		}
 
 	static if(hasMember!(T, "Update"))
 	public override void Update() {

@@ -45,6 +45,13 @@ class Entity
 	}
 		*/
 		
+	
+	public void SendMessage(string op, void* arg) {
+		foreach( c; components) {
+			c.OnMessage(op, arg);
+		}
+	}
+
 	public T AddComponent(T : Component)(T t) {
 		components ~= t;
 		(cast(Component)t).bind(this);

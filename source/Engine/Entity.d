@@ -71,18 +71,18 @@ class Entity
 	}
 	
 	public T GetComponent(T)() {
-		foreach(ref c; components) {
-			T t = cast(T)c;
+		foreach( c; components) {
+			T t = c.Cast!T();
 			if (t !is null) {
 				return t;
 			}
 		}
 		return null;
 	}
-
+	
 	public T GetComponent(T)(T component)  {
-		foreach(ref c; components) {
-			T t = cast(T)c;
+		foreach( c; components) {
+			T t = c.Cast!T();
 			if (t !is null) {
 				return t;
 			}

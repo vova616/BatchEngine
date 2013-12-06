@@ -29,13 +29,13 @@ abstract class Component
 	};
 		
 	public T Cast(T)() if (is(T == class)) {
-		auto tptr = cast(T)Cast(typeid(T));
+		auto tptr = cast(T)CastType(typeid(T));
 		if (tptr)	
 			return tptr;
 		return cast(T)this;			
 	}	
 
-	public void* Cast(TypeInfo targetType) {
+	public void* CastType(TypeInfo targetType) {
 		return null;
 	}		
 	
@@ -158,14 +158,14 @@ public class ComponentImpl(T) : Component {
 	}
 
 	static if(is(T == class))
-    public override void* Cast(TypeInfo targetType)
+    public override void* CastType(TypeInfo targetType)
     {
 		alias TypeTuple!(T, ImplicitConversionTargets!T) AllTypes;
 		foreach (F ; AllTypes)
 		{
 			if (targetType != typeid(F) &&
 				targetType != typeid(const(F)))
-			{
+			{ 
 				static if (isImplicitlyConvertible!(F, immutable(F)))
 				{
 					if (targetType != typeid(immutable(F)))

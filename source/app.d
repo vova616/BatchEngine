@@ -21,10 +21,10 @@ Texture ballTexture;
 import std.parallelism;
 
 class CollisionSystem : System {
-	BBTree tree = new BBTree(null);
+	BBTree tree;
 
     override void start() {
-          
+		tree = new BBTree(null);
     }
 
     override void process() {

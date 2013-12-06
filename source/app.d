@@ -129,7 +129,8 @@ class CircleCollider : Collider {
 		if (collider.type() == Type.Circle) {
 			auto c = cast(CircleCollider)collider;
 			auto dp = (c.transform.position.xy-transform.position.xy);
-			if (dp.x*dp.x + dp.y*dp.y <= (c.radius+radius)*(c.radius+radius)) {
+			auto d = ((c.radius+radius)*(c.radius+radius)) - (dp.x*dp.x + dp.y*dp.y);
+			if (d >= 0) {
 				return true;
 			}
 		} else {
@@ -187,10 +188,12 @@ class Rigidbody : Component {
 class Life : Component {
 	Energy energy;
 	Rigidbody rigidbody;
+	Collider collider;
 
 	override void Awake() {
 		energy = entity.GetComponent!Energy();
 		rigidbody = entity.GetComponent!Rigidbody();
+		collider = entity.GetComponent!Collider();
 	}
 
 	void Push(vec2 dir, float force) {
@@ -217,10 +220,22 @@ class Life : Component {
 			Collider c = cast(Collider)arg;
 			auto e = c.entity.GetComponent!Energy();
 			if (e) {
-				if (energy.energy > e.energy) {
+				if (energy.Size() > e.Size()) {
 					if (e.energy > 0) {
-						e.AddEnergy(-1f);
-						energy.AddEnergy(1f);
+						auto cc = cast(CircleCollider)c;
+						auto cc2 = cast(CircleCollider)collider;
+
+						//Calculate circle collision distance
+						auto dp = (cc.transform.position.xy-transform.position.xy);
+						auto d = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - (dp.x*dp.x + dp.y*dp.y);
+						auto amount = sqrt(d) * Core.DeltaTime * 5f;
+						
+						//move the target circle
+						c.transform.position += vec3(dp.normalized*amount,0);
+
+						//exchange sizes
+						e.AddSize(-amount);
+						energy.AddSize(amount);
 					}
 				}
 			}
@@ -239,6 +254,14 @@ class Energy : Component {
 
 	override void Awake() {
 		SetEnergy(energy);
+	}
+
+	void AddSize(float size) {
+		AddEnergy(size / sizeRatio);
+	}
+
+	void SetSize(float size) {
+		SetEnergy(size / sizeRatio);
 	}
 
 	void AddEnergy(float energy) {

@@ -100,21 +100,29 @@ struct BatchData {
 	}
 
 	final void Update()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
-		if (updateUV) {
-			batchable.UpdateBatch(null,uv,null,null,0);
+		int call = 4;
+		if (!updateUV) {
+			uv = null;
+			call--;
+		}
+		if (!updateColor) {
+			color = null;
+			call--;
+		}
+		if (!updateVertex) {
+			vertex = null;
+			call--;
+		}
+		if (!updateIndex) {
+			index = null;
+			call--;
+		}
+		if (call > 0) {	
+			batchable.UpdateBatch(vertex,uv,color,index,indexPosition);
 			updateUV = false;
-		}
-		if (updateColor) {
-			batchable.UpdateBatch(null,null,color,null,0);
-			updateColor = false;
-		}
-		if (updateVertex) {
-			batchable.UpdateBatch(vertex,null,null,null,0);
-			updateVertex = false;
-		}
-		if (updateIndex) {
-			batchable.UpdateBatch(null,null,null,index,indexPosition);
 			updateIndex = false;
+			updateVertex = false;
+			updateColor = false;
 		}
 	}
 
@@ -298,8 +306,6 @@ class Batch {
 				auto r = t.rotation;
 				auto s = t.scale;
 				
-				
-
 				for (;indx<max;indx++) {
 					matrcies[indx][0] = p;
 					matrcies[indx][1] = r;

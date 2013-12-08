@@ -218,3 +218,4 @@ pip-log.txt
 *.visualdproj
 *.o
 *.sln
+*.exe_cv

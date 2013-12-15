@@ -5,7 +5,7 @@ import derelict.glfw3.glfw3;
 
 public static class Input
 {
-	package static state[int] keysState;
+	package static shared state[int] keysState;
 	package static __gshared vec2 mousePos = vec2i(0,0);
 	package static __gshared vec2 mouseScroll = vec2(0,0);
 
@@ -59,7 +59,7 @@ public static class Input
 
 		
 	package static void Update() {
-		foreach (ref state s; keysState) {
+		foreach (ref s; keysState) {
 			switch (s)  {
 				case state.firstPress:
 					s = state.press;

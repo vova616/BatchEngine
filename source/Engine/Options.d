@@ -1,5 +1,5 @@
 module Engine.Options;
 
 static class Options {
-	static bool useMapBufferRange = true;
+	static shared bool useMapBufferRange = true;
 }

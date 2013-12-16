@@ -55,7 +55,7 @@ class GravityMouse  {
 
 	 enum m1 = 100000;
 	 enum m2 = 100;
-			
+
 	 void _Update() {
 		 auto bounds = camera.bounds();
 		 auto mpos = vec3(camera.MouseWorldPosition(),0);
@@ -110,6 +110,11 @@ class GravityMouse  {
 
 class InputHandle  {
 	mixin ComponentBase;
+
+
+	 void Start() {
+		writeln("InputHandler started");
+	 }
 
 	 void Update() {
 		if (Input.MouseScroll().y > 0)  {

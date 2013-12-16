@@ -160,7 +160,55 @@ class InputHandle : Component {
 	}
 }
 
+
+class Test {
+	mixin ComponentBase;
+
+	public void Hello() {
+		writeln("Hello fuckers");
+	}
+
+	public int Hello(int b) {
+		writeln("Hello fuckers 2");
+		return 0;
+	}
+}
+
+template typeidof(type) {
+	type v;
+}
+
 void main(string[] args) {
+	
+	import Engine.CStorage;
+
+	auto gravity = StorageImpl!(Test).allocate();
+	auto s = ComponentStorage.get!(Test);
+	auto comps = s.Components();
+
+	foreach(overload; __traits(getOverloads, Test, "Hello")) {
+		writeln( &overload);
+	}
+
+	void delegate() update;
+	update.funcptr = &Test.Hello;
+	update.ptr = comps[0];
+	update();
+
+	int delegate(int) hello;
+
+	TypeInfo mytype = typeid(&Test.Hello);
+	writeln(typeid(&Test.Hello), typeid(typeof(&hello)).stringof);
+
+	s.FindFunction(hello,"Hello"); 
+	hello.ptr = comps[0];
+	hello(2);
+	s.FindFunction(update,"Hello"); 
+	update.ptr = comps[0];
+	update();
+	writeln(comps[0], cast(void*)gravity);
+	
+	return;
 	try {
 		run();
 	}
@@ -182,7 +230,7 @@ void run() {
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
-					
+
 	float entities = 100000/3;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {

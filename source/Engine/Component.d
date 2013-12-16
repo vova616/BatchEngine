@@ -80,8 +80,7 @@ abstract class Component
 
 template ComponentBase()
 {
-	
-	e.Entity _entity;
+	public e.Entity _entity;
 	
 	final @property public e.Entity entity() {
 		return _entity;	

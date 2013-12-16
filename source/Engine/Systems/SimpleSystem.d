@@ -1,7 +1,7 @@
 module Engine.Systems.SimpleSystem;
 
 import Engine.System;
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Entity;
 
 class SimpleSystem : System {
@@ -22,6 +22,7 @@ class SimpleSystem : System {
 	abstract void process(Component c);
 
     override void onEntityEnter(Entity e) {
+		return;
         foreach(c2 ; e.Components) {
             auto c = cast(Component)c2;
             if (check(c))
@@ -30,6 +31,7 @@ class SimpleSystem : System {
     }
 	override void onEntityLeave(Entity e) {
 		for(int i=0;i<components.length;) {
+			/*
             if (components[i].entity == e)
 			{
 				if (onRemove(e)) {
@@ -39,6 +41,7 @@ class SimpleSystem : System {
 				}
 			}
 			i++;
+			*/
         }
     }
 

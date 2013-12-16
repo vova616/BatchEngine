@@ -1,12 +1,13 @@
 module Engine.Camera;
 
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Texture;
 import Engine.Core;
 import Engine.math;
 import Engine.Input;
 
-class Camera : Component {
+class Camera  {
+	mixin ComponentBase;
 	// This will identify our vertex buffer
 
 	package mat4 projection;

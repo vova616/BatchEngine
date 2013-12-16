@@ -1,13 +1,13 @@
 module Engine.Transform;
 
 import Engine.Core;
-import Engine.Component;
+import Engine.CStorage;
 import std.stdio;
 
 
 
-class Transform : Component {
-	
+class Transform  {
+	mixin ComponentBase;
 	@property ref vec3 Position()  {
 		updateInvert = true;
 		updatePos = true;
@@ -47,7 +47,7 @@ class Transform : Component {
 
 	}
 
-	override void OnComponentAdd() {
+	public void OnComponentAdd() {
 		entity.transform_ = this;
 	}
 

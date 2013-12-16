@@ -1,6 +1,6 @@
 module Engine.Entity;
 
-import Engine.Component;
+import Engine.CStorage;
 import t = Engine.Transform;
 import Engine.Core;
 import Engine.Coroutine;
@@ -26,7 +26,7 @@ class Entity
 	{
 		components = new Component[5];
 		components.length = 0;
-		AddComponent(new t.Transform());
+		AddComponent!(t.Transform)();
 		active = true;
 		valid = true;
 		arrayIndex = -1;
@@ -47,36 +47,31 @@ class Entity
 		
 	
 	public void SendMessage(string op, void* arg) {
-		foreach( c; components) {
-			c.OnMessage(op, arg);
-		}
+		//foreach( c; components) {
+		//	c.OnMessage(op, arg);
+		//}
 	}
 
-	public T AddComponent(T : Component)(T t) {
-		components ~= t;
-		(cast(Component)t).bind(this);
-		t.OnComponentAdd();
+	public T AddComponent(T, Args...)(Args args) if (is(T == class)) {
+		auto t = StorageImpl!(T).allocate(args);
+		components ~= new Component(t);
+		t._entity = this;
+		//t.bind(this);
+		static if (__traits(compiles, t.OnComponentAdd()))
+			t.OnComponentAdd();
+		return t;
+	}	
+
+	public T* AddComponent(T, Args...)(Args args) if (is(T == struct)) {
+		auto t = StorageImpl!(T).allocate(args);
+		components ~= new Component(t);
+		t._entity = this;
+		//t.bind(this);
+		static if (__traits(compiles, t.OnComponentAdd()))
+			t.OnComponentAdd();
 		return t;
 	}
 
-
-	public T AddComponent(T : Component, Args...)(Args args) {
-		auto t = new ComponentImpl!(T)(args);
-		components ~= t;
-		t.bind(this);
-		t.OnComponentAdd();
-		return t.component;
-	}
-
-
-	public T* AddComponent(T, Args...)(Args args) {
-		auto t = new ComponentImpl!(T)(args);
-		components ~= t;
-		t.bind(this);
-		t.OnComponentAdd();
-		return &t.component;
-	}
-	
 	public T GetComponent(T)() {
 		foreach( c; components) {
 			T t = c.Cast!T();
@@ -102,7 +97,7 @@ class Entity
 		Entity t = new Entity();
 		foreach (ref c ; this.components) {
 			auto newC = c.copy();
-			t.AddComponent(newC);
+			//t.AddComponent(newC);
 		}
 		return t;
 	}

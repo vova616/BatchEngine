@@ -11,7 +11,9 @@ import Engine.Material;
 import Engine.Shader;
 import std.stdio;
 
-class Sprite : Component, Batchable {
+class Sprite : Batchable {
+	mixin ComponentBase;
+
 	package vec4 _color = vec4(1,1,1,1);
 	package BatchData* batch;
 	Material _material;
@@ -34,7 +36,7 @@ class Sprite : Component, Batchable {
 		return _color;
 	}
 
-	public override void OnComponentAdd() {
+	public void OnComponentAdd() {
 		entity.sprite = this;
 	}
 
@@ -46,7 +48,7 @@ class Sprite : Component, Batchable {
 		this(texture.GetMaterial());
 	}
 
-	override void Awake() {
+	void Awake() {
 		Core.AddBatch(entity, this);
 	}
 

@@ -2,8 +2,10 @@ module Engine.Systems.AwakeSystem;
 
 
 import Engine.System;
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Entity;
+
+import std.stdio;
 
 class AwakeSystem : System {
 
@@ -16,9 +18,15 @@ class AwakeSystem : System {
 	}
 
 	override void onEntityEnter(Entity e) {
+		void delegate() awake;
 		foreach(c2 ; e.Components) {
-            auto c = cast(Component)c2;
-            c.Awake();
+			awake.funcptr = null;
+			auto c = cast(Component)c2;
+			c.FindFunction(awake, "Awake");
+			if (awake.funcptr !is null) {
+				awake.ptr = c.component;
+				awake();
+			}
         }
 	}
 

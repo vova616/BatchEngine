@@ -20,11 +20,11 @@ Texture ballTexture;
 import std.parallelism;
 
 class GravitySystem : System {
-    GravityMouse[] components;
+    //GravityMouse[] components;
 
     override void start() {
-        components = new GravityMouse[1000];
-        components.length = 0;    
+        //components = new GravityMouse[1000];
+        //components.length = 0;    
     }
 
     override void process() {
@@ -32,27 +32,19 @@ class GravitySystem : System {
 		auto mpos = vec3(camera.MouseWorldPosition(),0);
 		auto delta = Core.DeltaTime;
 		auto force = GravityMouse.force;
+
+		auto components = StorageImpl!(GravityMouse).storage;
+
         foreach(c ; parallel(components)) {
            c.Step(mpos,force,delta,bounds);
         }
     } 
 
     override void onEntityEnter(Entity e) {
-        foreach(c ; e.Components) {
-            auto g = (cast(Component)c).Cast!GravityMouse();
-			if (g)
-				components ~= g;
-        }
+       
     }
 	override void onEntityLeave(Entity e) {
-		for(int i=0;i<components.length;) {
-            if (components[i].entity == e)
-			{
-				components[i] = components[components.length-1];
-				components.length--;
-			}
-			i++;
-        }
+
     }
 }
 
@@ -116,8 +108,10 @@ class GravityMouse  {
 	 }
 }
 
-class InputHandle : Component {
-	override void Update() {
+class InputHandle  {
+	mixin ComponentBase;
+
+	 void Update() {
 		if (Input.MouseScroll().y > 0)  {
 			Core.camera.size += 3*Core.DeltaTime;
 			Core.camera.UpdateResolution();
@@ -188,7 +182,7 @@ struct TestA {
 
 template typeidof(type) {
 	type v;
-}
+}	
 
 void main(string[] args) {
 	
@@ -197,11 +191,7 @@ void main(string[] args) {
 	auto gravity = StorageImpl!(Test).allocate();
 	auto s = ComponentStorage.get!(Test);
 	auto comps = s.Components();
-
-	foreach(overload; __traits(getOverloads, Test, "Hello")) {
-		writeln( &overload);
-	}
-
+	
 	void delegate() update;
 	update.funcptr = &Test.Hello;
 	update.ptr = comps[0];
@@ -240,7 +230,7 @@ void main(string[] args) {
 	t2 = s.Cast!(TestA*)(comps[0]);
 	writeln(t2.a, typeof(t2).stringof);
 		
-	return;
+	//return;
 	try {
 		run();
 	}
@@ -263,6 +253,8 @@ void run() {
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
 
+
+
 	float entities = 100000/3;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {
@@ -277,6 +269,8 @@ void run() {
 		}
 	}
 
+
+
 	for (int i=0;i<10;i++) {
 		auto e2 = new Entity();
 		e2.transform.scale.x = 32;
@@ -288,8 +282,8 @@ void run() {
 	}
 
 	auto cam = new Entity();
-	camera = cam.AddComponent(new Camera());
-	cam.AddComponent(new InputHandle());
+	camera = cam.AddComponent!Camera();
+	cam.AddComponent!InputHandle();
 	Core.AddEntity(cam);
 	Core.camera = cam.GetComponent!Camera();
 
@@ -301,6 +295,8 @@ void run() {
 	e3.transform.position = vec3(100,Core.height-50,0);
 	auto fps = e3.AddComponent!Label(t,"FPS");
 	Core.AddEntity(e3);	
+
+
 
 	StartCoroutine( {
 		float time = 0;

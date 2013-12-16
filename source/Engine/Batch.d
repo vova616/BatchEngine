@@ -4,7 +4,7 @@ import std.stdio;
 import derelict.opengl3.gl;
 import Engine.Buffer;
 import gl3n.linalg;
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Texture;
 import Engine.Material;
 import Engine.Core;

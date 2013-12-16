@@ -7,7 +7,8 @@ import gl3n.linalg;
 import Engine.Font;
 import Engine.Core;
 
-class Label : Component, Batchable {
+class Label : Batchable {
+	mixin ComponentBase;
 	// This will identify our vertex buffer
 	string text;
 	Font font;
@@ -20,7 +21,7 @@ class Label : Component, Batchable {
 		return _material;
 	};
 
-
+		
 	@property ref vec4 color() {
 		if (batchData !is null) {
 			batchData.MarkCheck(BatchData.Type.Color);
@@ -42,7 +43,7 @@ class Label : Component, Batchable {
 		batchData = data;
 	}
 
-	override void Awake() {
+	 void Awake() {
 		Core.AddBatch(entity, this);
 	}
 	

@@ -160,17 +160,29 @@ class InputHandle : Component {
 	}
 }
 
+class HTest {
+	int b;
+}
 
-class Test {
+class Test : HTest {
 	mixin ComponentBase;
 
 	public void Hello() {
-		writeln("Hello fuckers");
+		writeln("Hello");
 	}
 
 	public int Hello(int b) {
-		writeln("Hello fuckers 2");
+		writeln("Hello int ",b);
+		this.b = b;
 		return 0;
+	}
+}
+
+struct TestA {
+	int a;
+
+	public void Foo() {
+		writeln("Foo");
 	}
 }
 
@@ -207,7 +219,27 @@ void main(string[] args) {
 	update.ptr = comps[0];
 	update();
 	writeln(comps[0], cast(void*)gravity);
+
+	auto t = s.Cast!HTest(comps[0]);
+	writeln(t.b);
+
+	auto t3 = s.Cast!Test(comps[0]);
+	writeln(t3.b);
 	
+	StorageImpl!(TestA).allocate();
+	s = ComponentStorage.get!(TestA);
+	comps = s.Components();
+
+	s.FindFunction(update,"Foo"); 
+	update.ptr = comps[0];
+	update();
+
+	auto t2 = s.Cast!TestA(comps[0]);
+	writeln(t2.a, typeof(t2).stringof);
+
+	t2 = s.Cast!(TestA*)(comps[0]);
+	writeln(t2.a, typeof(t2).stringof);
+		
 	return;
 	try {
 		run();

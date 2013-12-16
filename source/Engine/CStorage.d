@@ -3,7 +3,8 @@ module Engine.CStorage;
 import std.traits;
 import Engine.util;
 import std.stdio;
-
+import std.typetuple;
+	
 class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
 
@@ -37,9 +38,22 @@ class ComponentStorage {
 		assert(0, "T is not function");
 	}
 
+	public T Cast(T)(void* component) if (is(T == class)) {
+		return cast(T)Cast(typeid(T), component);
+	}	
+
+	public T* Cast(T)(void* component) if (is(T == struct)) {
+		return cast(T*)Cast(typeid(T*), component);
+	}	
+			
+	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
+		return cast(T*)Cast(typeid(T*), component);
+	}		
+		
+	abstract void* Cast(TypeInfo type, void* component);
 	abstract void*[] Components();
 	abstract void* FindFunction(string name, TypeInfo type);
-}
+}     
 
 class StorageImpl(T) : ComponentStorage {
 	static if (is(T == class)) {
@@ -53,10 +67,8 @@ class StorageImpl(T) : ComponentStorage {
 
 	public static __gshared Tp[] storage = new Tp[0]; 
 	public static __gshared StorageImpl!T it = new StorageImpl!T();
-	package static __gshared T sample;
-
+		
 	static this() {
-		sample = T.init;
 		ComponentStorage.Storages[typeid(T)] = it;
 	}	
 
@@ -66,13 +78,11 @@ class StorageImpl(T) : ComponentStorage {
 		storage[storage.length-1] = obj;
 		return obj;
 	}
-
-	template ID(T...){alias    T ID;}
-
+			
 	public override void* FindFunction(string name, TypeInfo type) {
 		return _FindFunction(name, type);
 	}
-
+	
 	package static void* _FindFunction(string name, TypeInfo type) {
 		foreach (member_string ; __traits(allMembers, T))
 		{
@@ -85,6 +95,44 @@ class StorageImpl(T) : ComponentStorage {
 				}
 			}
 		}	
+		return null;
+	}
+
+	static if (is(T == struct)) 
+	public override void* Cast(TypeInfo type, void* component) {
+		if (type == typeid(Tp))
+			return cast(Tp)component;
+		return null;	
+	}
+
+	static if (is(T == class))
+	public override void* Cast(TypeInfo type, void* component) {
+		return _Cast(type, component);
+	}
+
+	static if (is(T == class))
+	package static void* _Cast(TypeInfo type, void* component)
+	{
+		alias TypeTuple!(T, ImplicitConversionTargets!T) AllTypes;
+		foreach (F ; AllTypes)
+		{
+			if (type != typeid(F) &&
+			    type != typeid(const(F)))
+			{ 
+				static if (isImplicitlyConvertible!(F, immutable(F)))
+				{
+					if (type != typeid(immutable(F)))
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+			}
+			return cast(void*)cast(F)component;
+		}
 		return null;
 	}
 

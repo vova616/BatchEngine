@@ -24,8 +24,20 @@ class Component {
 		this.type = storage.Type();
 	}
 
+	public ReturnType!T RunFunction(T,Args...)(string name, Args args) {
+		auto func = FindFunction!T(name);
+		if (func is null)
+			return;
+		static if (is(T == delegate)) {
+			func.ptr = component;
+			return func(args);
+		} else {
+			return func(args);
+		}
+	}
+
 	public T FindFunction(T)(string name) {
-		return storage.FindFunction(name);
+		return storage.FindFunction!T(name);
 	}
 	
 	public bool FindFunction(T)(auto ref T t, string name) {
@@ -69,6 +81,21 @@ class ComponentStorage {
 		return Storages.values;
 	}
 	
+	public void RunFunction(T,Args...)(string name, Args args) {
+		auto func = FindFunction!T(name);
+		if (func is null)
+			return;
+		static if (is(T == delegate)) {
+			auto comps = Components();
+			foreach (c; comps) {
+				func.ptr = c;
+				func(args);
+			}
+		} else {
+			func(args);
+		}
+	}
+
 	public T FindFunction(T)(string name) {
 		static if (isSomeFunction!T) {
 			static if (is(T == delegate)) {

@@ -11,16 +11,8 @@ class UpdateSystem : System {
 	}
 	
 	override void process() {
-		void delegate() update;
 		foreach(cs ; ComponentStorage.getAll()) {
-			update.funcptr = null;
-			cs.FindFunction(update, "Update");
-			if (update.funcptr !is null) {
-				foreach (c; cs.Components()) {
-					update.ptr = c;
-					update();
-				}
-			}
+			cs.RunFunction!(void delegate())("Update");
 		}
 	}
 	

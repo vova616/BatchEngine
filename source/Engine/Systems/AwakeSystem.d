@@ -18,15 +18,9 @@ class AwakeSystem : System {
 	}
 
 	override void onEntityEnter(Entity e) {
-		void delegate() awake;
 		foreach(c2 ; e.Components) {
-			awake.funcptr = null;
 			auto c = cast(Component)c2;
-			c.FindFunction(awake, "Awake");
-			if (awake.funcptr !is null) {
-				awake.ptr = c.component;
-				awake();
-			}
+			c.RunFunction!(void delegate())("Awake");
         }
 	}
 

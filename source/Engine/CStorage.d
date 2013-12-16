@@ -18,7 +18,7 @@ class Component {
 		storage = StorageImpl!T.it;
 	}
 
-	this(void* component, ComponentStorage storage) {
+	this()(void* component, ComponentStorage storage) {
 		this.component = component;
 		this.storage = storage;
 		this.type = storage.Type();
@@ -100,10 +100,10 @@ class ComponentStorage {
 		static if (isSomeFunction!T) {
 			static if (is(T == delegate)) {
 				T t;
-				t.funcptr = cast(typeof(t.funcptr))FindFunction(name,typeid(t.funcptr));
+				t.funcptr = cast(typeof(t.funcptr))FindFunctionType(name,typeid(t.funcptr));
 				return t;
 			} else {
-				return cast(T)FindFunction(name,typeid(T));
+				return cast(T)FindFunctionType(name,typeid(T));
 			}
 		}
 		assert(0, "T is not function");
@@ -112,10 +112,10 @@ class ComponentStorage {
 	public bool FindFunction(T)(auto ref T t, string name) {
 		static if (isSomeFunction!T) {
 			static if (is(T == delegate)) {
-				t.funcptr = cast(typeof(t.funcptr))FindFunction(name,typeid(t.funcptr));
+				t.funcptr = cast(typeof(t.funcptr))FindFunctionType(name,typeid(t.funcptr));
 				return t is null;
 			} else {
-				t = FindFunction(name,typeid(T));
+				t = FindFunctionType(name,typeid(T));
 				return t is null;
 			}
 		}
@@ -123,21 +123,21 @@ class ComponentStorage {
 	}
 		
 	public T Cast(T)(void* component) if (is(T == class)) {
-		return cast(T)Cast(typeid(T), component);
+		return cast(T)TypeCast(typeid(T), component);
 	}	
 
 	public T* Cast(T)(void* component) if (is(T == struct)) {
-		return cast(T*)Cast(typeid(T*), component);
+		return cast(T*)TypeCast(typeid(T*), component);
 	}	
 			
 	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
-		return cast(T*)Cast(typeid(T*), component);
+		return cast(T*)TypeCast(typeid(T*), component);
 	}		
 	
 	abstract TypeInfo Type();
-	abstract void* Cast(TypeInfo type, void* component);
+	abstract void* TypeCast(TypeInfo type, void* component);
 	abstract void*[] Components();
-	abstract void* FindFunction(string name, TypeInfo type);
+	abstract void* FindFunctionType(string name, TypeInfo type);
 }     
 
 class StorageImpl(T) : ComponentStorage {
@@ -170,11 +170,11 @@ class StorageImpl(T) : ComponentStorage {
 		return typeid(T);
 	}	
 			
-	public override void* FindFunction(string name, TypeInfo type) {
-		return _FindFunction(name, type);
+	public override void* FindFunctionType(string name, TypeInfo type) {
+		return _FindFunctionType(name, type);
 	}
 	
-	package static void* _FindFunction(string name, TypeInfo type) {
+	package static void* _FindFunctionType(string name, TypeInfo type) {
 		foreach (member_string ; __traits(allMembers, T))
 		{
 			static if (__traits(compiles, __traits(getMember, T, member_string)))
@@ -191,14 +191,14 @@ class StorageImpl(T) : ComponentStorage {
 	}
 
 	static if (is(T == struct)) 
-	public override void* Cast(TypeInfo type, void* component) {
+	public override void* TypeCast(TypeInfo type, void* component) {
 		if (type == typeid(Tp))
 			return cast(Tp)component;
 		return null;	
 	}
 
 	static if (is(T == class))
-	public override void* Cast(TypeInfo type, void* component) {
+	public override void* TypeCast(TypeInfo type, void* component) {
 		return _Cast(type, component);
 	}
 

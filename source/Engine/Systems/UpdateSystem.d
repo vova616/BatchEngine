@@ -4,16 +4,31 @@ import Engine.System;
 import Engine.CStorage;
 import Engine.Entity;
 
-import Engine.Systems.SimpleSystem;
-
-class UpdateSystem : SimpleSystem {
+class UpdateSystem : System {
    
-	override bool check(Component c) {
-		//return c.hasUpdate;
-		return false;
+	override void start() {
+		
 	}
+	
+	override void process() {
+		void delegate() update;
+		foreach(cs ; ComponentStorage.getAll()) {
+			update.funcptr = null;
+			cs.FindFunction(update, "Update");
+			if (update.funcptr !is null) {
+				foreach (c; cs.Components()) {
+					update.ptr = c;
+					update();
+				}
+			}
+		}
+	}
+	
+	override void onEntityEnter(Entity e) {
 
-	override void process(Component c) {
-		//c.Update();
+	}
+	
+	override void onEntityLeave(Entity e) {
+		
 	}
 }

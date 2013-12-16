@@ -64,6 +64,10 @@ class ComponentStorage {
 	public static ComponentStorage get(T)() {
 		return Storages[typeid(T)];
 	}
+
+	public static ComponentStorage[] getAll()() {
+		return Storages.values;
+	}
 	
 	public T FindFunction(T)(string name) {
 		static if (isSomeFunction!T) {

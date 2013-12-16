@@ -37,11 +37,23 @@ class Component {
 	}
 
 	public T FindFunction(T)(string name) {
-		return storage.FindFunction!T(name);
+		auto fnc = storage.FindFunction!T(name);
+		static if (is(T == delegate)) {
+			if (fnc is null)
+				return null;
+			fnc.ptr = component;
+		}
+		return fnc;
 	}
 	
 	public bool FindFunction(T)(auto ref T t, string name) {
-		return storage.FindFunction(t,name);
+		auto found = storage.FindFunction(t,name);
+		static if (is(T == delegate)) {
+			if (!found)
+				return false;
+			t.ptr = component;
+		}
+		return found;
 	}
 	
 	public T Cast(T)() if (is(T == class)) {

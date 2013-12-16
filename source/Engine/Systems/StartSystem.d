@@ -1,7 +1,7 @@
 module Engine.Systems.StartSystem;
 
 import Engine.System;
-import Engine.CStorage;
+import Engine.Component;
 import Engine.Entity;
 import std.algorithm;
 

@@ -1,7 +1,7 @@
 module Engine.Systems.SimpleSystem;
 
 import Engine.System;
-import Engine.CStorage;
+import Engine.Component;
 import Engine.Entity;
 
 class SimpleSystem : System {

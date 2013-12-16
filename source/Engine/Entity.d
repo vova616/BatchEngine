@@ -1,12 +1,13 @@
 module Engine.Entity;
 
-import Engine.CStorage;
+import Engine.Component;
 import t = Engine.Transform;
 import Engine.Core;
 import Engine.Coroutine;
 import std.stdio;
 import Engine.Sprite;
 import Engine.util;
+import Engine.CStorage;
 
 class Entity
 {

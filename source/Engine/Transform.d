@@ -1,7 +1,7 @@
 module Engine.Transform;
 
 import Engine.Core;
-import Engine.CStorage;
+import Engine.Component;
 import std.stdio;
 
 

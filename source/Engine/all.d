@@ -1,7 +1,7 @@
 module Engine.all;
 
 public import Engine.Entity;
-public import Engine.CStorage;
+public import Engine.Component;
 public import Engine.Core;
 public import Engine.Shader;
 public import Engine.Transform;

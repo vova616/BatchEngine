@@ -1,6 +1,6 @@
 module Engine.Camera;
 
-import Engine.CStorage;
+import Engine.Component;
 import Engine.Texture;
 import Engine.Core;
 import Engine.math;

@@ -2,7 +2,7 @@ module Engine.Systems.AwakeSystem;
 
 
 import Engine.System;
-import Engine.CStorage;
+import Engine.Component;
 import Engine.Entity;
 
 import std.stdio;

@@ -32,9 +32,7 @@ class GravitySystem : System {
 		auto mpos = vec3(camera.MouseWorldPosition(),0);
 		auto delta = Core.DeltaTime;
 		auto force = GravityMouse.force;
-
-		auto components = StorageImpl!(GravityMouse).storage;
-
+		auto components = ComponentStorage.components!(GravityMouse)();
         foreach(c ; parallel(components)) {
            c.Step(mpos,force,delta,bounds);
         }

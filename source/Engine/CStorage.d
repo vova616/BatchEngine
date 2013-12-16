@@ -9,10 +9,14 @@ class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
 
 	public static ComponentStorage get(T)() {
-		return Storages[typeid(T)];
+		return StorageImpl!T.it;
 	}
 
-	public static ComponentStorage[] getAll()() {
+	public static auto components(T)() {
+		return StorageImpl!T.it.storage;
+	}
+	
+	public static ComponentStorage[] all()() {
 		return Storages.values;
 	}
 	

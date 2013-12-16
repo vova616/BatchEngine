@@ -11,7 +11,7 @@ class UpdateSystem : System {
 	}
 	
 	override void process() {
-		foreach(cs ; ComponentStorage.getAll()) {
+		foreach(cs ; ComponentStorage.all()) {
 			cs.RunFunction!(void delegate())("Update");
 		}
 	}

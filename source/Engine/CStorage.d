@@ -12,8 +12,30 @@ class ComponentStorage {
 		return StorageImpl!T.it;
 	}
 
+	public static ComponentStorage[] getDeep(T)() {
+		ComponentStorage[] storages = null;
+		foreach (s; Storages.values) {
+			void* dummy = cast(void*)1;
+			if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
+				storages ~= s;
+			}
+		}	
+		return storages;
+	}
+
 	public static auto components(T)() {
 		return StorageImpl!T.it.storage;
+	}
+
+	public static auto componentsDeep(T)() {
+		T[][] comps = null;
+		foreach (s; Storages.values) {
+			void* dummy = cast(void*)1;
+			if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
+				comps ~= cast(T[])s.Components();
+			}
+		}	
+		return comps;
 	}
 	
 	public static ComponentStorage[] all()() {
@@ -71,7 +93,7 @@ class ComponentStorage {
 			
 	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
 		return cast(T*)TypeCast(typeid(T*), component);
-	}		
+	}
 	
 	abstract TypeInfo Type();
 	abstract void* TypeCast(TypeInfo type, void* component);

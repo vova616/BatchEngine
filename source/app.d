@@ -26,17 +26,21 @@ class GravitySystem : System {
         //components = new GravityMouse[1000];
         //components.length = 0;    
     }
-
+		
     override void process() {
 		auto bounds = camera.bounds();
 		auto mpos = vec3(camera.MouseWorldPosition(),0);
 		auto delta = Core.DeltaTime;
 		auto force = GravityMouse.force;
 		auto components = ComponentStorage.components!(GravityMouse)();
-        foreach(c ; parallel(components)) {
-           c.Step(mpos,force,delta,bounds);
-        }
-    } 
+
+		auto stgs = ComponentStorage.componentsDeep!(GravityMouse)();
+		foreach (s; stgs) {
+	        foreach(c ; parallel(s)) {
+			   c.Step(mpos,force,delta,bounds);
+	        }
+		}
+    } 	
 
     override void onEntityEnter(Entity e) {
        
@@ -45,7 +49,7 @@ class GravitySystem : System {
 
     }
 }
-
+	
 class GravityMouse  {
 	 mixin ComponentBase;
 	 vec3 v = vec3(0,0,0);
@@ -106,6 +110,13 @@ class GravityMouse  {
 	 }
 }
 
+class GravityMouse2 : GravityMouse {
+	public override void Step(vec3 mpos, float mforce, float delta, recti bounds) { 
+		super.Step(mpos,mforce,delta,bounds);
+		entity.sprite.color = vec4(1,1,1,1);
+	}
+}
+
 class InputHandle  {
 	mixin ComponentBase;
 
@@ -141,7 +152,7 @@ class InputHandle  {
 			for (int i=0;i<20;i++) {
 				auto ship = new Entity();
 				ship.AddComponent!(Sprite)(ballTexture);
-				ship.AddComponent!GravityMouse();
+				ship.AddComponent!GravityMouse2();
 				//ship.AddComponent(new GameOfLife());
 				Core.AddEntity(ship);
 				ship.transform.scale.x = 10;
@@ -257,7 +268,7 @@ void run() {
 	mmouse.transform.scale = vec3(100, 100, 1);
 
 
-
+		
 	float entities = 100000/3;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {

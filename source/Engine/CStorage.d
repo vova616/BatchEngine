@@ -24,22 +24,22 @@ class ComponentStorage {
 	}
 
 	public static auto components(T)() {
-		return StorageImpl!T.it.storage;
+		return ConstArray!T(StorageImpl!T.it.storage);
 	}
 
 	public static auto componentsDeep(T)() {
-		T[][] comps = null;
+		ConstArray!T[] comps = null;
 		foreach (s; Storages.values) {
 			void* dummy = cast(void*)1;
 			if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
-				comps ~= cast(T[])s.Components();
+				comps ~= cast(ConstArray!(T))s.Components();
 			}
-		}	
+		}		
 		return comps;
 	}
 	
-	public static ComponentStorage[] all()() {
-		return Storages.values;
+	public static auto all()() {
+		return ConstArray!(ComponentStorage)(Storages.values);
 	}
 	
 	public void RunFunction(T,Args...)(string name, Args args) {
@@ -97,8 +97,9 @@ class ComponentStorage {
 	
 	abstract TypeInfo Type();
 	abstract void* TypeCast(TypeInfo type, void* component);
-	abstract void*[] Components();
+	abstract ConstArray!(void*) Components();
 	abstract void* FindFunctionType(string name, TypeInfo type);
+
 }     
 
 class StorageImpl(T) : ComponentStorage {
@@ -111,11 +112,10 @@ class StorageImpl(T) : ComponentStorage {
 		alias Tp = T*;
 	}
 
-	public static __gshared Tp[] storage = new Tp[0]; 
+	package static __gshared Tp[] storage = new Tp[0]; 
 	public static __gshared StorageImpl!T it = new StorageImpl!T();
 	package static __gshared bool added = false;	
 	
-
 	public static Tp allocate(Args...)(Args args) {
 		if (!added) {
 			added = true;
@@ -190,7 +190,7 @@ class StorageImpl(T) : ComponentStorage {
 	}
 
 
-	public override void*[] Components() {
-		return cast(void*[])storage;
+	public override ConstArray!(void*) Components() {
+		return ConstArray!(void*)(cast(void*[])storage);
 	}
 }

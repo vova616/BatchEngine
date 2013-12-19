@@ -9,9 +9,9 @@ import std.typetuple;
 import Engine.CStorage;
 
 class Component {
-	void* component;
-	TypeInfo type;
-	ComponentStorage storage;
+	package void* component;
+	package TypeInfo type;
+	package ComponentStorage storage;
 
 	this(T)(T t) {
 		component = cast(void*)t;

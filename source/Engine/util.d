@@ -1,5 +1,7 @@
 module Engine.util;
 
+import std.range;
+
 package extern (C) Object _d_newclass (in ClassInfo info);
 
 T copy(T:Object) (T value)
@@ -35,4 +37,29 @@ template remove(ArrTy, IntTy) {
 		arr[ix] = arr[$-1];
 		arr.length = arr.length - 1;
 	}
+}
+
+struct ConstArray(T) {
+	package T[] array;
+
+	this(T[] array) {
+		this.array = array;
+	}
+
+	@property length() { return array.length; }
+
+	T opIndex(size_t i) {
+		return array[i];
+	}
+
+	auto opSlice(size_t x, size_t y) {
+		return typeof(this)(array[x..y]);
+	}	
+
+	@property front() { return array[0]; }
+	@property empty() const {return array.length == 0;}
+	void popFront() {assert(!empty); array = array[1..$];}
+	@property typeof(this) save() {return this;}
+
+	static assert(isForwardRange!(typeof(this)));
 }

@@ -24,8 +24,7 @@ class StartSystem : System {
     } 
 
 	override void onEntityEnter(Entity e) {
-		foreach(c2 ; e.Components) {
-			auto c = cast(Component)c2;
+		foreach(c ; e.Components) {
 			auto d = c.FindFunction!Start("Start");
 			if (d !is null) {
 				comps ~= d;

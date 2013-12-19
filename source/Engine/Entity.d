@@ -35,8 +35,8 @@ class Entity
 
 	final @property t.Transform transform() { return transform_; }
 
-	final @property public const(Component[]) Components() {
-			return cast(const)components;	
+	final @property public auto Components() {
+			return ConstArray!Component(components);	
 		};
 
 		/*

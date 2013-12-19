@@ -18,8 +18,7 @@ class AwakeSystem : System {
 	}
 
 	override void onEntityEnter(Entity e) {
-		foreach(c2 ; e.Components) {
-			auto c = cast(Component)c2;
+		foreach(c ; e.Components) {
 			c.RunFunction!(void delegate())("Awake");
         }
 	}

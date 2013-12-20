@@ -53,7 +53,7 @@ class Entity
 		//}
 	}
 
-	public T AddComponent(T, Args...)(Args args) if (is(T == class)) {
+	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
 		t._entity = this;
@@ -62,16 +62,6 @@ class Entity
 			t.OnComponentAdd();
 		return t;
 	}	
-
-	public T* AddComponent(T, Args...)(Args args) if (is(T == struct)) {
-		auto t = StorageImpl!(T).allocate(args);
-		components ~= new Component(t);
-		t._entity = this;
-		//t.bind(this);
-		static if (__traits(compiles, t.OnComponentAdd()))
-			t.OnComponentAdd();
-		return t;
-	}
 
 	public T GetComponent(T)() {
 		foreach( c; components) {

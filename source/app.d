@@ -117,7 +117,7 @@ class GravityMouse2 : GravityMouse {
 	}
 }
 
-class InputHandle  {
+struct InputHandle  {
 	mixin ComponentBase;
 
 

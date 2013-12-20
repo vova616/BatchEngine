@@ -7,16 +7,24 @@ import e = Engine.Entity;
 import std.traits;
 import std.typetuple;
 import Engine.CStorage;
+import Engine.util;
 
 class Component {
 	package void* component;
 	package TypeInfo type;
 	package ComponentStorage storage;
 
-	this(T)(T t) {
+	this(T)(T t)  {
 		component = cast(void*)t;
-		type = typeid(T);
-		storage = StorageImpl!T.it;
+		static if (is(T == class)) {
+			type = typeid(T);
+			storage = StorageImpl!T.it;
+		}
+		else {
+			alias U = baseType!T;
+			type = typeid(U);
+			storage = StorageImpl!U.it;
+		}
 	}
 
 	this()(void* component, ComponentStorage storage) {

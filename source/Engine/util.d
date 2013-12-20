@@ -39,6 +39,10 @@ template remove(ArrTy, IntTy) {
 	}
 }
 
+template baseType(T : T*) {
+	alias baseType = T;
+}
+
 struct ConstArray(T) {
 	package T[] array;
 

@@ -151,16 +151,14 @@ class StorageImpl(T) : ComponentStorage {
 		return null;
 	}
 
-	static if (is(T == struct)) 
 	public override void* TypeCast(TypeInfo type, void* component) {
-		if (type == typeid(Tp))
-			return cast(Tp)component;
-		return null;	
-	}
-
-	static if (is(T == class))
-	public override void* TypeCast(TypeInfo type, void* component) {
-		return _Cast(type, component);
+		static if (is(T == class))
+			return _Cast(type, component);
+		else {
+			if (type == typeid(Tp))
+				return cast(Tp)component;
+			return null;	
+		}
 	}
 
 	static if (is(T == class))

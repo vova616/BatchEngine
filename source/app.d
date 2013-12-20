@@ -18,6 +18,8 @@ Camera camera;
 Texture ballTexture;
 
 import std.parallelism;
+import std.datetime;
+import Engine.util;
 
 class GravitySystem : System {
     //GravityMouse[] components;
@@ -35,10 +37,14 @@ class GravitySystem : System {
 		auto components = ComponentStorage.components!(GravityMouse)();
 
 		auto stgs = ComponentStorage.componentsDeep!(GravityMouse)();
+		
 		foreach (s; stgs) {
-	        foreach(c ; parallel(s)) {
-			   c.Step(mpos,force,delta,bounds);
-	        }
+			void closure(ConstArray!GravityMouse arr) {
+				foreach(c;arr) {
+					c.Step(mpos,force,delta,bounds);
+				}
+			}	
+			parallelRange!(10)(&closure,s);
 		}
     } 	
 

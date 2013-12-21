@@ -1,6 +1,7 @@
 module Engine.util;
 
 import std.range;
+import std.parallelism;
 
 package extern (C) Object _d_newclass (in ClassInfo info);
 
@@ -39,8 +40,9 @@ template remove(ArrTy, IntTy) {
 	}
 }
 
-import std.range;
-import std.parallelism;
+template baseType(T : T*) {
+	alias baseType = T;
+}
 
 void parallelRange(int works, T, R)(T t, R range) {
 	typeof(scopedTask(t,range))[works] tasks;

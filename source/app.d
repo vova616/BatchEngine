@@ -49,7 +49,7 @@ class GravitySystem : System {
 			}	
 			parallelRange!(10)(&closure,s);
 			*/
-			foreach(c; parallel(s, taskPool.defaultWorkUnitSize(s.length))) {
+			foreach(c; parallel(s)) {
 				c.Step(mpos,force,delta,bounds);
 			}
 		}

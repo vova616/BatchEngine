@@ -37,14 +37,25 @@ class GravitySystem : System {
 		auto components = ComponentStorage.components!(GravityMouse)();
 
 		auto stgs = ComponentStorage.componentsDeep!(GravityMouse)();
-		
+
+		StopWatch timer;
+		timer.start();
 		foreach (s; stgs) {
+			/*
 			void closure(ConstArray!GravityMouse arr) {
 				foreach(c;arr) {
 					c.Step(mpos,force,delta,bounds);
 				}
 			}	
 			parallelRange!(10)(&closure,s);
+			*/
+			foreach(c; parallel(s, taskPool.defaultWorkUnitSize(s.length))) {
+				c.Step(mpos,force,delta,bounds);
+			}
+		}
+		timer.stop();
+		if (timer.peek.msecs > 10) {
+			//writeln("slowdown ", timer.peek.msecs);
 		}
     } 	
 

@@ -70,9 +70,13 @@ struct ConstArray(T) {
 	}	
 
 	@property front() { return array.front; }
+	@property back() { return array.back; }
 	@property empty() const {return array.empty;}
 	void popFront() {assert(!empty); array.popFront();}
+	void popBack() {assert(!empty); array.popBack();}
 	@property typeof(this) save() {return typeof(this)(array);}
 	
 	static assert(isForwardRange!(typeof(this)));
+	static assert(hasLength!(typeof(this)));
+	static assert(isRandomAccessRange!(typeof(this)));
 }

@@ -39,8 +39,17 @@ template remove(ArrTy, IntTy) {
 	}
 }
 
-template baseType(T : T*) {
-	alias baseType = T;
+import std.range;
+import std.parallelism;
+
+void parallelRange(int works, T, R)(T t, R range) {
+	typeof(scopedTask(t,range))[works] tasks;
+	int m = range.length/(tasks.length+1);
+	for (int i=0;i<tasks.length;i++) {
+		tasks[i] = scopedTask(t,range[i*m..(i+1)*m]);
+		taskPool.put(tasks[i]);
+	}
+	t(range[(tasks.length)*m..range.length]);
 }
 
 struct ConstArray(T) {
@@ -60,10 +69,14 @@ struct ConstArray(T) {
 		return typeof(this)(array[x..y]);
 	}	
 
-	@property front() { return array[0]; }
-	@property empty() const {return array.length == 0;}
-	void popFront() {assert(!empty); array = array[1..$];}
-	@property typeof(this) save() {return this;}
-
+	@property front() { return array.front; }
+	@property back() { return array.back; }
+	@property empty() const {return array.empty;}
+	void popFront() {assert(!empty); array.popFront();}
+	void popBack() {assert(!empty); array.popBack();}
+	@property typeof(this) save() {return typeof(this)(array);}
+	
 	static assert(isForwardRange!(typeof(this)));
+	static assert(hasLength!(typeof(this)));
+	static assert(isRandomAccessRange!(typeof(this)));
 }

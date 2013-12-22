@@ -9,6 +9,7 @@ import Engine.Texture;
 import Engine.Material;
 import Engine.Core;
 import engine = Engine.Entity;
+import Engine.Transform;
 import std.parallelism;
 import std.bitmanip;
 import Engine.Allocator;
@@ -24,9 +25,9 @@ struct BatchData {
 		Size,
 	}
 
-	this(Batch batch, engine.Entity entity, Batchable batchable,int vertexIndex,int indexIndex,int vertexCount,int indexCount,int totalVertexCount,int totalIndexCount) {
+	this(Batch batch, Transform transform, Batchable batchable,int vertexIndex,int indexIndex,int vertexCount,int indexCount,int totalVertexCount,int totalIndexCount) {
 		this.batch = batch;
-		this.entity = entity;
+		this.transform = transform;
 		this.batchable = batchable;
 		this.vertexIndex = vertexIndex;
 		this.indexIndex = indexIndex;
@@ -42,7 +43,7 @@ struct BatchData {
 	}
 
 	Batch batch;
-	engine.Entity entity;
+	Transform transform;
 	Batchable batchable;
 	int vertexIndex;
 	int indexIndex;
@@ -191,7 +192,7 @@ class Batch {
 			resize = true;
 		}		
 		//auto b = batchAllocator.allocate();
-		auto b = new BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		auto b = new BatchData(this,entity.transform,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
 		//*b = BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
 		Batches ~= b;
 		vertexIndex += batch.vertecies;
@@ -301,7 +302,7 @@ class Batch {
 				e.ForceUpdate(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
 				
 				//if (e.updateTransform || 1 == 1) {
-				auto t = e.entity.transform;
+				auto t = e.transform;
 				auto p = t.position;
 				auto r = t.rotation;
 				auto s = t.scale;
@@ -320,7 +321,7 @@ class Batch {
 				e.Update(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
 
 				//if (e.updateTransform || 1 == 1) {
-				auto t = e.entity.transform;
+				auto t = e.transform;
 				auto p = t.position;
 				auto r = t.rotation;
 				auto s = t.scale;

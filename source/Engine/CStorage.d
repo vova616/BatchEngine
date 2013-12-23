@@ -4,6 +4,7 @@ import std.traits;
 import Engine.util;
 import std.stdio;
 import std.typetuple;
+import Engine.Entity;
 
 class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
@@ -82,7 +83,7 @@ class ComponentStorage {
 		}
 		assert(0, "T is not function");
 	}
-		
+	
 	public T Cast(T)(void* component) if (is(T == class)) {
 		return cast(T)TypeCast(typeid(T), component);
 	}	
@@ -90,7 +91,7 @@ class ComponentStorage {
 	public T* Cast(T)(void* component) if (is(T == struct)) {
 		return cast(T*)TypeCast(typeid(T*), component);
 	}	
-			
+	
 	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
 		return cast(T*)TypeCast(typeid(T*), component);
 	}
@@ -99,8 +100,9 @@ class ComponentStorage {
 	abstract void* TypeCast(TypeInfo type, void* component);
 	abstract ConstArray!(void*) Components();
 	abstract void* FindFunctionType(string name, TypeInfo type);
-
-}     
+	abstract void* Clone(void*);
+	abstract void Bind(void*,Entity);
+}     	
 
 class StorageImpl(T) : ComponentStorage {
 	static if (is(T == class)) {
@@ -121,16 +123,37 @@ class StorageImpl(T) : ComponentStorage {
 			added = true;
 			ComponentStorage.Storages[typeid(T)] = it;
 		}
-		auto obj = new T(args);
-		storage.length++;
-		storage[storage.length-1] = obj;
-		return obj;
+		return new T(args);
 	}
-
+	
 	public override TypeInfo Type() {
 		return typeid(T);
 	}	
-			
+
+	public override void Bind(void* component, Entity entity) {
+		Bind(cast(Tp)component, entity);
+	}
+	
+	public void Bind(Tp component, Entity entity) {
+		storage.length++;
+		storage[storage.length-1] = component;
+		static if (__traits(compiles, component._entity = entity)) {
+			component._entity = entity;
+		}	
+	}
+
+	public Tp Clone(Tp component) {
+		auto c = (cast(void*)component)[0..size].dup.ptr;
+		static if (is(T == class)) {
+			(cast(Object)c).__monitor = null;
+		}
+		return cast(Tp)c;
+	}
+
+	public override void* Clone(void* component) {
+		return cast(void*)Clone(cast(Tp)component);
+	}
+	
 	public override void* FindFunctionType(string name, TypeInfo type) {
 		return _FindFunctionType(name, type);
 	}
@@ -139,14 +162,23 @@ class StorageImpl(T) : ComponentStorage {
 		foreach (member_string ; __traits(allMembers, T))
 		{
 			static if (__traits(compiles, __traits(getMember, T, member_string)))
-			if (name == member_string) {
+			{
+				bool found = false;
 				foreach(overload; __traits(getOverloads, T, member_string)) {
 					static if (__traits(compiles, &overload)) {
+						if (!found) {
+							if (name == member_string) {
+								found = true;
+							} else {
+								break;
+							}
+						}
 						if (typeid(&overload) == type)
 							return cast(void*)&overload;
 					}
 				}
 			}
+
 		}	
 		return null;
 	}
@@ -162,7 +194,7 @@ class StorageImpl(T) : ComponentStorage {
 	}
 
 	static if (is(T == class))
-	package static void* _Cast(TypeInfo type, void* component)
+		package static void* _Cast(TypeInfo type, void* component)
 	{
 		alias TypeTuple!(T, ImplicitConversionTargets!T) AllTypes;
 		foreach (F ; AllTypes)
@@ -187,7 +219,7 @@ class StorageImpl(T) : ComponentStorage {
 		return null;
 	}
 
-
+	
 	public override ConstArray!(void*) Components() {
 		return ConstArray!(void*)(cast(void*[])storage);
 	}

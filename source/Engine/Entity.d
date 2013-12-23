@@ -36,16 +36,16 @@ class Entity
 	final @property t.Transform transform() { return transform_; }
 
 	final @property public auto Components() {
-			return ConstArray!Component(components);	
-		};
+		return ConstArray!Component(components);	
+	};
 
-		/*
-	public void AddComponent()(Component component) {
-		components ~= component;
-		component.onComponentAdd(this);
-	}
-		*/
-		
+	/*
+	 public void AddComponent()(Component component) {
+	 components ~= component;
+	 component.onComponentAdd(this);
+	 }
+	 */
+	
 	
 	public void SendMessage(string op, void* arg) {
 		//foreach( c; components) {
@@ -56,11 +56,18 @@ class Entity
 	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
-		t._entity = this;
-		//t.bind(this);
+		StorageImpl!(T).it.Bind(t,this);	
 		static if (__traits(compiles, t.OnComponentAdd()))
 			t.OnComponentAdd();
 		return t;
+	}	
+
+	public auto AddComponent()(Component component)  {
+		components ~= component;
+		component.storage.Bind(component.component,this);
+		static if (__traits(compiles, t.OnComponentAdd()))
+			t.OnComponentAdd();
+		return component;
 	}	
 
 	public T GetComponent(T)() {
@@ -84,11 +91,10 @@ class Entity
 	}
 
 	public Entity Clone()
-	{
+	{	
 		Entity t = new Entity();
 		foreach (ref c ; this.components) {
-			auto newC = c.copy();
-			//t.AddComponent(newC);
+			t.AddComponent(c.Clone());
 		}
 		return t;
 	}
@@ -100,7 +106,7 @@ class Entity
 		Core.RemoveEntity(this);
 	}
 
-
+	
 	
 	public bool RemoveComponent()(Component component) {
 		for (int i=0;i<components.length;i++) {
@@ -127,5 +133,5 @@ class Entity
 		return result;
 	}
 }
-	
+
 

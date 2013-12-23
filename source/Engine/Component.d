@@ -33,6 +33,10 @@ class Component {
 		this.type = storage.Type();
 	}
 
+	public Component Clone() {
+		return new Component(storage.Clone(component), storage);
+	}	
+
 	public ReturnType!T RunFunction(T,Args...)(string name, Args args) {
 		auto func = FindFunction!T(name);
 		if (func is null)

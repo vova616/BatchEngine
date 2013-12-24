@@ -56,17 +56,13 @@ class Entity
 	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
-		StorageImpl!(T).it.Bind(t,this);	
-		static if (__traits(compiles, t.OnComponentAdd()))
-			t.OnComponentAdd();
-		return t;
+		StorageImpl!(T).Bind(t,this);	
+		return t;	
 	}	
 
 	public auto AddComponent()(Component component)  {
 		components ~= component;
 		component.storage.Bind(component.component,this);
-		static if (__traits(compiles, t.OnComponentAdd()))
-			t.OnComponentAdd();
 		return component;
 	}	
 

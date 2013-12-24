@@ -220,6 +220,7 @@ void main(string[] args) {
 	import Engine.CStorage;
 
 	auto gravity = StorageImpl!(Test).allocate();
+	StorageImpl!(Test).Bind(gravity, null);
 	auto s = ComponentStorage.get!(Test);
 	auto comps = s.Components();
 	
@@ -247,7 +248,8 @@ void main(string[] args) {
 	auto t3 = s.Cast!Test(comps[0]);
 	writeln(t3.b);
 	
-	StorageImpl!(TestA).allocate();
+	auto ss = StorageImpl!(TestA).allocate();
+	StorageImpl!(TestA).Bind(ss, null);
 	s = ComponentStorage.get!(TestA);
 	comps = s.Components();
 
@@ -284,23 +286,24 @@ void run() {
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
 
+	auto gravityBall = new Entity();
+	gravityBall.AddComponent!(Sprite)(ballTexture);
+	gravityBall.AddComponent!(GravityMouse)();
+	gravityBall.transform.scale = vec3(4, 4, 1);
 
-		
+	
 	float entities = 100000/3;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {
 		for (int y=0;y<Core.height*m;y++) {
-			auto ship = new Entity();
-			ship.AddComponent!(Sprite)(ballTexture);
-			ship.AddComponent!(GravityMouse)();
-			ship.name = to!string(x);
-			ship.transform.position = vec3(x/m,y/m,0);
-			ship.transform.scale = vec3(4, 4, 1);
-			Core.AddEntity(ship);
+			auto gball = gravityBall.Clone();
+			gball.name = to!string(x);
+			gball.transform.position = vec3(x/m,y/m,0);
+			Core.AddEntity(gball);
 		}
 	}
 
-
+	
 
 	for (int i=0;i<10;i++) {
 		auto e2 = new Entity();

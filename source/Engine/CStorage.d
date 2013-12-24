@@ -24,22 +24,28 @@ class ComponentStorage {
 		return storages;
 	}
 
-	public static auto components(T)() {
-		return ConstArray!T(StorageImpl!T.it.storage);
-	}
-
-	public static auto componentsDeep(T)() {
-		ConstArray!T[] comps = null;
-		foreach (s; Storages.values) {
-			void* dummy = cast(void*)1;
-			if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
-				comps ~= cast(ConstArray!(T))s.Components();
-			}
-		}		
-		return comps;
+	public static ConstArray!(StorageImpl!T.Tp) components(T)() {
+		return ConstArray!(StorageImpl!T.Tp)(StorageImpl!T.storage);
 	}
 	
-	public static auto all()() {
+	public static ConstArray!(StorageImpl!T.Tp)[] componentsDeep(T)() {
+		static if (is(T == struct)) {
+			//struct cannot have/be inhereted.
+			return [ components!T() ];
+		} else {	
+			ConstArray!(T)[] comps = null;
+			foreach (s; Storages.values) {
+				void* dummy = cast(void*)1;
+				//checking if its possible to cast the value to T.
+				if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
+					comps ~= cast(ConstArray!(T))s.Components();
+				}
+			}		
+			return comps;
+		}
+	}
+	
+	public static ConstArray!(ComponentStorage) all()() {
 		return ConstArray!(ComponentStorage)(Storages.values);
 	}
 	
@@ -134,13 +140,16 @@ class StorageImpl(T) : ComponentStorage {
 		Bind(cast(Tp)component, entity);
 	}
 	
-	public void Bind(Tp component, Entity entity) {
+	public static void Bind(Tp component, Entity entity) {
 		storage.length++;
 		storage[storage.length-1] = component;
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	
-	}
+		static if (__traits(compiles, component.OnComponentAdd())) {
+			component.OnComponentAdd();
+		}
+	}	
 
 	public Tp Clone(Tp component) {
 		auto c = (cast(void*)component)[0..size].dup.ptr;

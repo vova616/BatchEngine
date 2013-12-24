@@ -25,7 +25,7 @@ class ComponentStorage {
 	}
 
 	public static ConstArray!(StorageImpl!T.Tp) components(T)() {
-		return ConstArray!(StorageImpl!T.Tp)(StorageImpl!T.storage);
+		return ConstArray!(StorageImpl!T.Tp)(StorageImpl!T.active);
 	}
 	
 	public static ConstArray!(StorageImpl!T.Tp)[] componentsDeep(T)() {
@@ -120,7 +120,16 @@ class StorageImpl(T) : ComponentStorage {
 		alias Tp = T*;
 	}
 
+	package struct EPair {
+		Entity entity;
+		size_t index;
+		bool active;
+	}
+
 	package static __gshared Tp[] storage = new Tp[0]; 
+	package static __gshared size_t activeIndex = 0;
+	package static __gshared EPair[Tp] map;
+
 	public static __gshared StorageImpl!T it = new StorageImpl!T();
 	package static __gshared bool added = false;	
 	
@@ -135,22 +144,27 @@ class StorageImpl(T) : ComponentStorage {
 	public override TypeInfo Type() {
 		return typeid(T);
 	}	
-
+	
 	public override void Bind(void* component, Entity entity) {
 		Bind(cast(Tp)component, entity);
 	}
-	
+
+	@property final public static Tp[] active() {
+		return storage[0..activeIndex];	
+	};	
+
 	public static void Bind(Tp component, Entity entity) {
-		storage.length++;
-		storage[storage.length-1] = component;
+		storage ~= component;
+		map[component] = EPair(entity,storage.length-1,true);
+		activeIndex++;	
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	
 		static if (__traits(compiles, component.OnComponentAdd())) {
 			component.OnComponentAdd();
 		}
-	}	
-
+	}		
+	
 	public Tp Clone(Tp component) {
 		auto c = (cast(void*)component)[0..size].dup.ptr;
 		static if (is(T == class)) {
@@ -230,6 +244,6 @@ class StorageImpl(T) : ComponentStorage {
 
 	
 	public override ConstArray!(void*) Components() {
-		return ConstArray!(void*)(cast(void*[])storage);
+		return ConstArray!(void*)(cast(void*[])active);
 	}
 }

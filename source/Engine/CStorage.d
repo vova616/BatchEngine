@@ -37,7 +37,7 @@ class ComponentStorage {
 			foreach (s; Storages.values) {
 				void* dummy = cast(void*)1;
 				//checking if its possible to cast the value to T.
-				if (cast(void*)s.Cast!T(dummy) == cast(void*)1) {
+				if (cast(void*)s.Cast!T(dummy) !is null) {	
 					comps ~= cast(ConstArray!(T))s.Components();
 				}
 			}		
@@ -108,6 +108,11 @@ class ComponentStorage {
 	abstract void* FindFunctionType(string name, TypeInfo type);
 	abstract void* Clone(void*);
 	abstract void Bind(void*,Entity);
+
+	
+	abstract void Active(void*);
+	abstract void Deactive(void*);
+	abstract void Remove(void*);
 }     	
 
 class StorageImpl(T) : ComponentStorage {
@@ -155,15 +160,101 @@ class StorageImpl(T) : ComponentStorage {
 
 	public static void Bind(Tp component, Entity entity) {
 		storage ~= component;
-		map[component] = EPair(entity,storage.length-1,true);
-		activeIndex++;	
+		map[component] = EPair(entity,storage.length-1,false);
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	
 		static if (__traits(compiles, component.OnComponentAdd())) {
 			component.OnComponentAdd();
 		}
-	}		
+	}
+
+	public override void Active(void* component) {
+		Active(cast(Tp)component);
+	}
+
+	public override void Deactive(void* component) {
+		Deactive(cast(Tp)component);
+	}
+
+	public override void Remove(void* component) {
+		Remove(cast(Tp)component);
+	}
+
+	public static void Active(Tp component) {
+		auto epair = &map[component];
+		assert (!epair.active);
+		auto index = activeIndex;
+		if (epair.index == index) {
+			activeIndex++;
+			epair.active = true;
+		} else {
+			auto component2 = storage[index];
+			auto epair2 = &map[component2];
+			assert (!epair2.active);
+			storage[index] = component;
+			storage[epair.index] = component2;
+			epair2.index = epair.index;
+			epair.index = index;
+			epair.active = true;
+			activeIndex++;
+		}
+	}
+	
+	public static void Deactive(Tp component) {
+		auto epair = &map[component];
+		assert (epair.active);
+		auto index = activeIndex-1;
+		if (epair.index == index) {
+			activeIndex--;	
+			epair.active = false;
+		} else {
+			auto component2 = storage[index];
+			auto epair2 = &map[component2];
+			assert (epair2.active);
+			storage[index] = component;
+			storage[epair.index] = component2;
+			epair2.index = epair.index;
+			epair.index = index;
+			epair.active = false;
+			activeIndex--;
+		}	
+	}
+
+	
+	public static void Remove(Tp component) {
+		auto epair = map[component];
+		map.remove(component);
+		if (epair.index != storage.length-1) {
+			if (epair.active) {
+				auto index = activeIndex-1;
+				//Replace with another active
+				if (epair.index != index) {
+					auto component2 = storage[index];
+					auto epair2 = &map[component2];
+					assert (epair2.active);
+					storage[index] = component;
+					storage[epair.index] = component2;
+					epair2.index = epair.index;
+				}	
+				//Replace with the last element
+				auto component2 = storage[storage.length-1];
+				auto epair2 = &map[component2];
+				storage[index] = component2;
+				epair2.index = index;	
+			} else {
+				auto index = storage.length-1;
+				auto component2 = storage[index];
+				auto epair2 = &map[component2];
+				storage[epair.index] = component2;
+				epair2.index = epair.index;
+			}
+		}
+		if (epair.active) {
+			activeIndex--;
+		}
+		storage.length--;
+	}
 	
 	public Tp Clone(Tp component) {
 		auto c = (cast(void*)component)[0..size].dup.ptr;

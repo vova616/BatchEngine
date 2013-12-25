@@ -102,6 +102,11 @@ class Entity
 		Core.RemoveEntity(this);
 	}
 
+	package void onActive() {
+		foreach( c; components) {
+			c.storage.Active(c.component);
+		}
+	}
 	
 	
 	public bool RemoveComponent()(Component component) {

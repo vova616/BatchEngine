@@ -38,12 +38,13 @@ public class Core
 	public static void AddEntity(Entity entity) {
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;
+		entity.onActive();
 		foreach (s; systems) {
 			s.onEntityEnter(entity);
 		}
 	}
 
-
+	
 	public static void AddSystem(System s) {
 		systems ~= s;
 		s.start();
@@ -52,7 +53,7 @@ public class Core
 		}
 	}
 
-
+	
 	public static void AddBatch(Entity entity, Batchable batch) {
 		auto mat = batch.material;
 		foreach(ref b; batches) {
@@ -92,20 +93,20 @@ public class Core
 		systems ~= new UpdateSystem();
 		
 
-
+		
 		DerelictGLFW3.load();
 		DerelictGL3.load();
-	
+		
 
 		if(!glfwInit()) 
 			throw new Exception("glfwInit failure");
 
-
+		
 
 		glfwWindowHint(GLFW_VERSION_MAJOR, 2); // Use OpenGL Core v3.2
 		glfwWindowHint(GLFW_VERSION_MINOR, 1);
 
-
+		
 		window = glfwCreateWindow(width,height,"SpaceSim",null,null);
 		if (!window)
 			throw new Exception("Failed to create window."); 
@@ -179,7 +180,7 @@ public class Core
 			}
 			]";	
 
-
+		
 		const auto fragSource = q"[
 			#version 120
 			varying vec2 UV; 

@@ -226,29 +226,25 @@ class StorageImpl(T) : ComponentStorage {
 		auto epair = map[component];
 		map.remove(component);
 		if (epair.index != storage.length-1) {
-			if (epair.active) {
-				auto index = activeIndex-1;
-				//Replace with another active
-				if (epair.index != index) {
-					auto component2 = storage[index];
+			auto dstIndex = epair.index;
+			auto srcIndex = activeIndex-1;
+			if (epair.active && activeIndex != storage.length) {
+				//Replace with last active	
+				if (dstIndex != srcIndex) {
+					auto component2 = storage[srcIndex];
 					auto epair2 = &map[component2];
+					epair2.index = dstIndex;
 					assert (epair2.active);
-					storage[index] = component;
-					storage[epair.index] = component2;
-					epair2.index = epair.index;
-				}	
-				//Replace with the last element
-				auto component2 = storage[storage.length-1];
-				auto epair2 = &map[component2];
-				storage[index] = component2;
-				epair2.index = index;	
-			} else {
-				auto index = storage.length-1;
-				auto component2 = storage[index];
-				auto epair2 = &map[component2];
-				storage[epair.index] = component2;
-				epair2.index = epair.index;
-			}
+					storage[dstIndex] = component2;
+					dstIndex = srcIndex;
+				}			
+			}	
+			srcIndex = storage.length-1;
+			//Replace with the last element
+			auto component2 = storage[srcIndex];
+			auto epair2 = &map[component2];
+			epair2.index = dstIndex;
+			storage[dstIndex] = component2;
 		}
 		if (epair.active) {
 			activeIndex--;

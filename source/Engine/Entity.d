@@ -13,7 +13,7 @@ class Entity
 {
 	package Component[] components;
 	package t.Transform transform_;
-	package size_t arrayIndex;
+	package ptrdiff_t arrayIndex;
 	bool active;
 	Sprite sprite;
 	string name;
@@ -97,9 +97,15 @@ class Entity
 
 	public void Destory()
 	{
+		if (!valid)
+			return;
+		Core.RemoveEntity(this);
+		foreach( c; components) {	
+			c.storage.Remove(c.component);
+		}
+		components = null;
 		active = false;
 		valid = false;
-		Core.RemoveEntity(this);
 	}
 
 	package void onActive() {

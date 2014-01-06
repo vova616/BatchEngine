@@ -76,15 +76,13 @@ class Entity
 		return null;
 	}
 	
-	public T GetComponent(T)(T component)  {
+	public Component GetComponent()(Component component)  {
 		foreach( c; components) {
-			T t = c.Cast!T();
-			if (t !is null) {
-				return t;
-			}
-		}
+			if (component.component == c.component)
+				return c;
+		}	
 		return null;
-	}
+	}	
 
 	public Entity Clone()
 	{	
@@ -114,10 +112,10 @@ class Entity
 		}
 	}
 	
-	
+
 	public bool RemoveComponent()(Component component) {
 		for (int i=0;i<components.length;i++) {
-			if (component == components[i]) {
+			if (component.component == components[i].component) {
 				components[i] = components[components.length-1];
 				components.length--;
 				return true;
@@ -127,17 +125,14 @@ class Entity
 	}
 
 	public bool RemoveComponent(T)() {
-		bool result = false;
 		for (int i=0;i<components.length;i++) {
-			T t = cast(T)components[i];
-			if (t !is null) {
+			if (components[i].Cast!T() !is null) {
 				components[i] = components[components.length-1];
 				components.length--;
-				i--;
-				result = true;
+				return true;
 			}
 		}
-		return result;
+		return false;
 	}
 }
 

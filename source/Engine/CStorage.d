@@ -108,8 +108,6 @@ class ComponentStorage {
 	abstract void* FindFunctionType(string name, TypeInfo type);
 	abstract void* Clone(void*);
 	abstract void Bind(void*,Entity);
-
-	
 	abstract void Active(void*);
 	abstract void Deactive(void*);
 	abstract void Remove(void*);
@@ -129,7 +127,7 @@ class StorageImpl(T) : ComponentStorage {
 		Entity entity;
 		size_t index;
 		bool active;
-	}
+	}	
 
 	package static __gshared Tp[] storage = new Tp[0]; 
 	package static __gshared size_t activeIndex = 0;
@@ -185,42 +183,51 @@ class StorageImpl(T) : ComponentStorage {
 		auto epair = &map[component];
 		assert (!epair.active);
 		auto index = activeIndex;
+		//Check if we are activating the last index
 		if (epair.index == index) {
 			activeIndex++;
 			epair.active = true;
 		} else {
+			//get first deactived component
 			auto component2 = storage[index];
 			auto epair2 = &map[component2];
 			assert (!epair2.active);
+			//replace first deactived with the activated component
 			storage[index] = component;
 			storage[epair.index] = component2;
+			//replace indecies and change active to true
 			epair2.index = epair.index;
 			epair.index = index;
 			epair.active = true;
+			//we added an active component
 			activeIndex++;
-		}
+		}	
 	}
 	
 	public static void Deactive(Tp component) {
 		auto epair = &map[component];
 		assert (epair.active);
 		auto index = activeIndex-1;
+		//Check if we are deactivating the last index
 		if (epair.index == index) {
 			activeIndex--;	
 			epair.active = false;
 		} else {
+			//get last active component
 			auto component2 = storage[index];
 			auto epair2 = &map[component2];
 			assert (epair2.active);
+			//replace last active with the deactivated component
 			storage[index] = component;
 			storage[epair.index] = component2;
+			//replace indecies and change active to false
 			epair2.index = epair.index;
 			epair.index = index;
 			epair.active = false;
+			//we removed an active component
 			activeIndex--;
 		}	
 	}
-
 	
 	public static void Remove(Tp component) {
 		auto epair = map[component];
@@ -252,7 +259,7 @@ class StorageImpl(T) : ComponentStorage {
 		storage.length--;
 	}
 	
-	public Tp Clone(Tp component) {
+	public static Tp Clone(Tp component) {
 		auto c = (cast(void*)component)[0..size].dup.ptr;
 		static if (is(T == class)) {
 			(cast(Object)c).__monitor = null;

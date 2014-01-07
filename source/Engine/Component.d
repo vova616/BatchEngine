@@ -69,7 +69,7 @@ class Component {
 		return found;
 	}
 
-	public T Cast(T)() if (is(T == class)) {
+	public T Cast(T)() if (is(T == class) || is(T == interface)) {
 		return storage.Cast!T(component);
 	}	
 

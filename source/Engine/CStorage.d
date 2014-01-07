@@ -90,7 +90,7 @@ class ComponentStorage {
 		assert(0, "T is not function");
 	}
 	
-	public T Cast(T)(void* component) if (is(T == class)) {
+	public T Cast(T)(void* component) if (is(T == class) || is(T == interface)) {
 		return cast(T)TypeCast(typeid(T), component);
 	}	
 
@@ -331,7 +331,7 @@ class StorageImpl(T) : ComponentStorage {
 					continue;
 				}
 			}
-			return cast(void*)cast(F)component;
+			return cast(void*)cast(F)(cast(T)component);
 		}
 		return null;
 	}

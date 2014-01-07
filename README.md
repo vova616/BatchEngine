@@ -42,9 +42,8 @@ For now there are few built in systems:
 - StartSystem - callind "void Start()" only once during game loop.
 - UpdateSystem - callind "void Update()" each game loop.
 - BatchSystem - the batch rendering system.
-There will be more systems but thats it for now.
 
-You can create your own systems just look on the ones above.
+There will be more systems but thats it for now, you can create your own systems pretty easily just look on the ones above.
 
 ### Components
 

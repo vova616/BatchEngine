@@ -17,12 +17,14 @@ import Engine.System;
 import Engine.Systems.UpdateSystem;
 import Engine.Systems.AwakeSystem;
 import Engine.Systems.StartSystem;
+import Engine.Systems.BatchSystem;
+
 
 public class Core
 {	
 	public static GLFWwindow* window;
 	package static Entity[] entities;
-	package static Batch[] batches;
+	
 	package static System[] systems;
 	public shared static auto width = 800;
 	public shared static auto height = 600;
@@ -54,21 +56,13 @@ public class Core
 	}
 
 	
-	public static void AddBatch(Entity entity, Batchable batch) {
-		auto mat = batch.material;
-		foreach(ref b; batches) {
-			if (b.material == mat) {
-				b.Add(entity,batch);
-				return;
-			}
-		}	
-		auto b = new Batch(4, mat);
-		batches ~= b;
-		b.Add(entity, batch);
-	}
+	
 
 	public static void RemoveEntity(Entity entity) {
 		if (entity.inScene) {
+			foreach (s; systems) {
+				s.onEntityLeave(entity);
+			}
 			auto index = entity.arrayIndex;
 			auto replaceEntity = entities[entities.length-1];
 			entities[index] = replaceEntity;
@@ -76,10 +70,6 @@ public class Core
 			entity.arrayIndex = -1;
 			entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
 			entities.length--;
-
-			foreach (s; systems) {
-				s.onEntityLeave(entity);
-			}
 		}
 	}
 
@@ -91,7 +81,7 @@ public class Core
 		systems ~= new AwakeSystem();
 		systems ~= new StartSystem();
 		systems ~= new UpdateSystem();
-		
+		systems ~= new BatchSystem();
 
 		
 		DerelictGLFW3.load();
@@ -228,12 +218,6 @@ public class Core
 
 			RunCoroutines();
 
-			t1.start();
-			foreach (ref b; batches) {
-				b.Update();
-				b.Draw();
-			}
-			t1.stop();
 			//writeln("Draw ", cast(double)sw.peek().nsecs / 1000000000);
 			//import core.memory;
 			Input.Update();

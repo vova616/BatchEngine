@@ -43,9 +43,6 @@ class Label : Batchable {
 		batchData = data;
 	}
 
-	 void Awake() {
-		Core.AddBatch(entity, this);
-	}
 	
 	@property int vertecies() {
 		return actualSize*4;	

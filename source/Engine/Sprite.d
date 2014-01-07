@@ -48,9 +48,6 @@ class Sprite : Batchable {
 		this(texture.GetMaterial());
 	}
 
-	void Awake() {
-		Core.AddBatch(entity, this);
-	}
 
 	void OnBatchSetup(BatchData* data) {
 		batch = data;

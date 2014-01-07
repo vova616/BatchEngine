@@ -18,7 +18,7 @@ import Engine.Systems.UpdateSystem;
 import Engine.Systems.AwakeSystem;
 import Engine.Systems.StartSystem;
 import Engine.Systems.BatchSystem;
-
+import std.algorithm;
 
 public class Core
 {	
@@ -49,6 +49,7 @@ public class Core
 	
 	public static void AddSystem(System s) {
 		systems ~= s;
+		sort!"a.timing < b.timing"(systems);
 		s.start();
 		foreach (e; entities) {
 			s.onEntityEnter(e);

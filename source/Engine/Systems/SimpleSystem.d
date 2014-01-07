@@ -14,6 +14,7 @@ class SimpleSystem : System {
  
     } 
 
+
 	abstract bool check(Component c);
 	abstract void process(Component c);
 

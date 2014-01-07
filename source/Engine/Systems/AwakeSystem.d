@@ -17,6 +17,10 @@ class AwakeSystem : System {
 
 	}
 
+	@property override Timing timing() { 
+		return Timing.Awake;
+	}
+
 	override void onEntityEnter(Entity e) {
 		foreach(c ; e.Components) {
 			c.RunFunction!(void delegate())("Awake");

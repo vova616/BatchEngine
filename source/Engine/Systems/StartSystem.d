@@ -23,6 +23,10 @@ class StartSystem : System {
 		comps.length = 0;
     } 
 
+	@property override Timing timing() { 
+		return Timing.Start;
+	}
+
 	override void onEntityEnter(Entity e) {
 		foreach(c ; e.Components) {
 			auto d = c.FindFunction!Start("Start");

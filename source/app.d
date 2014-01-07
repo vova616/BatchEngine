@@ -28,6 +28,10 @@ class GravitySystem : System {
         //components = new GravityMouse[1000];
         //components.length = 0;    
     }
+
+	@property override Timing timing() { 
+		return Timing.Update;
+	}
     
     override void process() {
         auto bounds = camera.bounds();

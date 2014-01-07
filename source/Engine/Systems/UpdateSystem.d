@@ -15,6 +15,10 @@ class UpdateSystem : System {
 			cs.RunFunction!(void delegate())("Update");
 		}
 	}
+
+	@property override Timing timing() { 
+		return Timing.Update;
+	}
 	
 	override void onEntityEnter(Entity e) {
 

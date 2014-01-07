@@ -51,4 +51,8 @@ class BatchSystem : System {
 			b.Draw();
 		}
 	}	
+
+	@property override Timing timing() { 
+		return Timing.Draw;
+	}
 }

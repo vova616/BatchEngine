@@ -56,6 +56,18 @@ public class Core
 		}
 	}
 
+	public static bool RemoveSystem(System system) {
+		foreach (index,s; systems) {
+			if (system == s) {
+				systems[index] = systems[systems.length-1];
+				systems.length--;
+				sort!"a.timing < b.timing"(systems);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	
 	
 

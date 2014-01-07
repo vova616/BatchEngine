@@ -194,7 +194,7 @@ class Batch {
 			resize = true;
 		}		
 		auto b = new BatchData(this,entity.transform,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
-		entity.AddComponent(new Component(b));
+		entity.AddComponent(b);
 		Batches ~= b;
 		b.batchIndex = Batches.length-1;
 		vertexIndex += batch.vertecies;

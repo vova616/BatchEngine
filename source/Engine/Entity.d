@@ -66,6 +66,13 @@ class Entity
 		return component;
 	}	
 
+	public auto AddComponent(T)(T component)  {
+		auto c = new Component(component);
+		components ~= c;
+		c.storage.Bind(c.component,this);
+		return component;
+	}
+
 	public T GetComponent(T)() {
 		foreach( c; components) {
 			T t = c.Cast!T();

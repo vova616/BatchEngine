@@ -14,6 +14,7 @@ import std.parallelism;
 import std.bitmanip;
 import Engine.Allocator;
 import std.datetime;
+import Engine.Component;
 
 struct BatchData {
 	enum Type {
@@ -45,6 +46,7 @@ struct BatchData {
 	Batch batch;
 	Transform transform;
 	Batchable batchable;
+	size_t batchIndex;
 	int vertexIndex;
 	int indexIndex;
 	int vertexCount;
@@ -191,15 +193,28 @@ class Batch {
 			isize = 2 * (indexIndex + batch.indecies);
 			resize = true;
 		}		
-		//auto b = batchAllocator.allocate();
 		auto b = new BatchData(this,entity.transform,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
-		//*b = BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		entity.AddComponent(new Component(b));
 		Batches ~= b;
+		b.batchIndex = Batches.length-1;
 		vertexIndex += batch.vertecies;
 		indexIndex += batch.indecies;
 		batch.OnBatchSetup(b);
 	}
 
+	void Remove(engine.Entity entity, Batchable batch) {
+		foreach(c;entity.components) {
+			auto b = c.Cast!BatchData();
+			if (b !is null && b.batchable == batch) {
+				DeleteBatches ~= *b;
+				auto bd = Batches[Batches.length-1];
+				Batches[b.batchIndex] = bd;
+				Batches.length--;
+				bd.batchIndex = b.batchIndex;
+				break;
+			}
+		}
+	}
 
 	void Resize(BatchData* batch) {
 		if (vertexIndex + batch.totalVertexCount > vsize || 
@@ -215,7 +230,7 @@ class Batch {
 		}
 	}
 
-	 void Update() {
+	void Update() {
 		 //Checking for resizing/deactiving/etc
 		 for (int i = 0;i<CheckBatches.length;i++) {
 			 auto b = CheckBatches[i];
@@ -371,7 +386,7 @@ class Batch {
 		*/
 	}
 
-	 void Draw() {
+	void Draw() {
 		StopWatch t1;
 		t1.start();
 		material.render(this);

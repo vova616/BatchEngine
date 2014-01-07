@@ -66,7 +66,7 @@ class Entity
 		return component;
 	}	
 
-	public auto AddComponent(T)(T component)  {
+	public auto AddComponent(T)(T component) if (!is(T == Component))  {
 		auto c = new Component(component);
 		components ~= c;
 		c.storage.Bind(c.component,this);

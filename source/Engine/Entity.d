@@ -23,11 +23,12 @@ class Entity
 		return arrayIndex >= 0;
 	};
 
-	this()
+	this(bool addTransform = true)
 	{
 		components = new Component[5];
 		components.length = 0;
-		AddComponent!(t.Transform)();
+		if (addTransform)
+			AddComponent!(t.Transform)();
 		active = true;
 		valid = true;
 		arrayIndex = -1;
@@ -92,8 +93,8 @@ class Entity
 	}	
 
 	public Entity Clone()
-	{	
-		Entity t = new Entity();
+	{		
+		Entity t = new Entity(false);
 		foreach (ref c ; this.components) {
 			t.AddComponent(c.Clone());
 		}

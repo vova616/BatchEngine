@@ -129,7 +129,7 @@ class StorageImpl(T) : ComponentStorage {
 		bool active;
 	}	
 
-	package static __gshared Tp[] storage = new Tp[0]; 
+	package static __gshared Tp[] storage; 
 	package static __gshared size_t activeIndex = 0;
 	package static __gshared EPair[Tp] map;
 

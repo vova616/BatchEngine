@@ -9,6 +9,7 @@ import Engine.Entity;
 class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
 	package static __gshared int bitCounter = 0;
+	public int bitIndex = -1;
 
 	public static ComponentStorage get(T)() {
 		return StorageImpl!T.it;
@@ -133,7 +134,7 @@ class StorageImpl(T) : ComponentStorage {
 	package static __gshared Tp[] storage; 
 	package static __gshared size_t activeIndex = 0;
 	package static __gshared EPair[Tp] map;
-	package static __gshared int bit = -1;
+	package static __gshared int _bitIndex = -1;
 	
 	public static __gshared StorageImpl!T it() {
 		if (!_it) {
@@ -148,7 +149,8 @@ class StorageImpl(T) : ComponentStorage {
 		if (!_it) {
 			_it = new StorageImpl!T();
 			ComponentStorage.Storages[typeid(T)] = _it;
-			bit = bitCounter++;
+			_bitIndex = bitCounter++;
+			_it.bitIndex = _bitIndex;
 		}	
 	}			
 	
@@ -174,6 +176,11 @@ class StorageImpl(T) : ComponentStorage {
 		}	
 		storage ~= component;
 		map[component] = EPair(entity,storage.length-1,false);
+		if (_bitIndex >= entity.componentsBits.length) {
+			entity.componentsBits.length = ComponentStorage.bitCounter;
+		}
+		entity.componentsBits[_bitIndex] = true;
+
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	

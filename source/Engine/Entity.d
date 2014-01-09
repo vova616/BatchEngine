@@ -8,12 +8,14 @@ import std.stdio;
 import Engine.Sprite;
 import Engine.util;
 import Engine.CStorage;
+import std.bitmanip;
 
 class Entity
 {
 	package Component[] components;
 	package t.Transform transform_;
 	package ptrdiff_t arrayIndex;
+	BitArray componentsBits;
 	bool active;
 	Sprite sprite;
 	string name;
@@ -24,9 +26,10 @@ class Entity
 	};
 
 	this()
-	{
+	{	
 		components = new Component[5];
 		components.length = 0;
+		componentsBits.length = ComponentStorage.bitCounter+1;
 		AddComponent!(t.Transform)();
 		active = true;
 		valid = true;
@@ -38,28 +41,14 @@ class Entity
 	final @property public auto Components() {
 		return ConstArray!Component(components);	
 	};
-
-	/*
-	 public void AddComponent()(Component component) {
-	 components ~= component;
-	 component.onComponentAdd(this);
-	 }
-	 */
 	
-	
-	public void SendMessage(string op, void* arg) {
-		//foreach( c; components) {
-		//	c.OnMessage(op, arg);
-		//}
-	}
-
 	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
 		StorageImpl!(T).Bind(t,this);	
 		return t;	
 	}	
-
+	
 	public auto AddComponent()(Component component)  {
 		components ~= component;
 		component.storage.Bind(component.component,this);

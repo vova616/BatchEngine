@@ -47,12 +47,14 @@ class Entity
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
 		StorageImpl!(T).Bind(t,this);	
+		setComponentBit(StorageImpl!(T)._bitIndex, true);
 		return t;	
 	}	
 	
 	public auto AddComponent()(Component component)  {
 		components ~= component;
 		component.storage.Bind(component.component,this);
+		setComponentBit(component.storage.bitIndex, true);
 		return component;
 	}	
 
@@ -60,9 +62,17 @@ class Entity
 		auto c = new Component(component);
 		components ~= c;
 		c.storage.Bind(c.component,this);
+		setComponentBit(c.storage.bitIndex, true);
 		return component;
 	}
 
+	package void setComponentBit(int bit, bool flag) {
+		if (bit >= componentsBits.length) {
+			componentsBits.length = ComponentStorage.bitCounter;
+		}
+		componentsBits[bit] = flag;
+	}
+	
 	public T GetComponent(T)() {
 		foreach( c; components) {
 			T t = c.Cast!T();
@@ -98,7 +108,8 @@ class Entity
 		foreach( c; components) {	
 			c.storage.Remove(c.component);
 		}
-		components = null;
+		components.length = 0;
+		components = null;	
 		active = false;
 		valid = false;
 	}
@@ -109,27 +120,46 @@ class Entity
 		}
 	}
 	
-
+	
 	public bool RemoveComponent()(Component component) {
+		ComponentStorage storage = component.storage;
+		auto found = false;
+		auto left = 0;
 		for (int i=0;i<components.length;i++) {
-			if (component.component == components[i].component) {
-				components[i] = components[components.length-1];
-				components.length--;
-				return true;
-			}
+			auto c = components[i];
+			if (c.storage == storage) {
+				if (component.component == c.component) {
+					components[i] = components[components.length-1];
+					components.length--;
+					storage.Remove(component.component);
+					found = true;
+				} else {
+					left++;
+				}
+			}	
 		}
-		return false;
-	}
+		if (found && left == 0) {
+			setComponentBit(storage.bitIndex, false);
+		}		
+		return found;
+	}	
 
-	public bool RemoveComponent(T)() {
+	public bool RemoveComponents(T)() {
+		alias Tp = StorageImpl!(T).Tp;
+		auto found = false;
 		for (int i=0;i<components.length;i++) {
-			if (components[i].Cast!T() !is null) {
+			auto component = components[i];
+			if (component.Cast!Tp() !is null) {
 				components[i] = components[components.length-1];
-				components.length--;
-				return true;
+				components.length--;	
+				StorageImpl!(T).Remove(cast(Tp)component.component);
+				if (!found) {
+					setComponentBit(StorageImpl!(T)._bitIndex, false);
+				}	
+				found = true;
 			}
-		}
-		return false;
+		}	
+		return found;
 	}
 }
 

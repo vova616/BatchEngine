@@ -176,11 +176,6 @@ class StorageImpl(T) : ComponentStorage {
 		}	
 		storage ~= component;
 		map[component] = EPair(entity,storage.length-1,false);
-		if (_bitIndex >= entity.componentsBits.length) {
-			entity.componentsBits.length = ComponentStorage.bitCounter;
-		}
-		entity.componentsBits[_bitIndex] = true;
-
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	

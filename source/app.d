@@ -217,7 +217,7 @@ struct TestA {
 }
 
 
-void tests() {
+bool tests() {
     
     void testComponent(Tp, Args...)(Args args) {
         alias T = baseType!Tp;
@@ -263,12 +263,12 @@ void tests() {
     assert(is(pointerType!(HTest*) == HTest));
     assert(is(pointerType!(HTest**) == HTest));
     assert(is(pointerType!(HTest***) == HTest));
-    
+    return true;
 }
 
 void main(string[] args) { 
-    tests();    
     try {
+        assert(tests());  
         run();
     }
     catch (Exception e) {

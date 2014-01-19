@@ -108,7 +108,9 @@ class Entity
 
     public bool RemoveComponent()(Component component) {
         for (int i=0;i<components.length;i++) {
-            if (component.component == components[i].component) {
+            auto component2 = components[i];
+            if (component.component == component2.component) {
+                component2.storage.Remove(component.component);
                 components[i] = components[components.length-1];
                 components.length--;
                 return true;
@@ -119,9 +121,11 @@ class Entity
 
     public bool RemoveComponent(T)() {
         for (int i=0;i<components.length;i++) {
-            if (components[i].Cast!T() !is null) {
+            auto component = components[i];
+            if (component.Cast!T() !is null) {
+                component.storage.Remove(component.component);
                 components[i] = components[components.length-1];
-                components.length--;
+                components.length--;  
                 return true;
             }
         }
@@ -131,7 +135,9 @@ class Entity
     public bool RemoveComponents(T)() {
         bool removed = false;
         for (int i=0;i<components.length;i++) {
-            if (components[i].Cast!T() !is null) {
+            auto component = components[i];
+            if (component.Cast!T() !is null) {
+                component.storage.Remove(component.component);
                 components[i] = components[components.length-1];
                 components.length--;
                 removed = true;

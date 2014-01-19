@@ -29,9 +29,9 @@ class GravitySystem : System {
         //components.length = 0;    
     }
 
-	@property override Timing timing() { 
-		return Timing.Update;
-	}
+    @property override Timing timing() { 
+        return Timing.Update;
+    }
     
     override void process() {
         auto bounds = camera.bounds();
@@ -189,17 +189,18 @@ struct InputHandle  {
     }
 }
 
+
 class HTest {
     int b;
 }
 
 class Test : HTest {
     mixin ComponentBase;
-
+    
     public void Hello() {
         writeln("Hello");
     }
-
+    
     public int Hello(int b) {
         writeln("Hello int ",b);
         this.b = b;
@@ -209,17 +210,64 @@ class Test : HTest {
 
 struct TestA {
     int a;
-
+    
     public void Foo() {
         writeln("Foo");
     }
 }
 
-template typeidof(type) {
-    type v;
-}	
 
-void main(string[] args) {      
+void tests() {
+    
+    void testComponent(Tp, Args...)(Args args) {
+        alias T = baseType!Tp;
+        Entity e = new Entity(false);   
+        auto hTest = e.AddComponent!T(args);
+        assert(e.GetComponent!T() == hTest);
+        assert(e.RemoveComponent!T());
+        assert(e.GetComponent!T() is null);
+        e.AddComponent(new Component(hTest));
+        assert(e.GetComponent!T() == hTest);
+        assert(e.RemoveComponents!T());
+        assert(e.GetComponent!T() is null); 
+        e.Destory();
+    }   
+
+    testComponent!HTest();
+    testComponent!TestA();
+    testComponent!Test();  
+    testComponent!GravityMouse(); 
+    testComponent!GravityMouse2(); 
+    testComponent!(HTest*)();
+    testComponent!(TestA*)();
+    testComponent!(Test*)();  
+    testComponent!(GravityMouse*)(); 
+    testComponent!(GravityMouse2*)();
+    
+    assert(is(baseType!TestA == TestA));
+    assert(is(baseType!(TestA*) == TestA));
+    assert(is(baseType!(TestA**) == TestA));
+    assert(is(baseType!(TestA***) == TestA));
+
+    assert(is(baseType!HTest == HTest));
+    assert(is(baseType!(HTest*) == HTest));
+    assert(is(baseType!(HTest**) == HTest));
+    assert(is(baseType!(HTest***) == HTest));
+
+    assert(is(pointerType!TestA == TestA*));
+    assert(is(pointerType!(TestA*) == TestA*));
+    assert(is(pointerType!(TestA**) == TestA*));
+    assert(is(pointerType!(TestA***) == TestA*));
+    
+    assert(is(pointerType!HTest == HTest));
+    assert(is(pointerType!(HTest*) == HTest));
+    assert(is(pointerType!(HTest**) == HTest));
+    assert(is(pointerType!(HTest***) == HTest));
+    
+}
+
+void main(string[] args) { 
+    tests();    
     try {
         run();
     }

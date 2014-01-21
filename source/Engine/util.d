@@ -54,7 +54,7 @@ template baseType(T) {
 
 template pointerType(T) {
 	alias Tp = baseType!T;
-	static if (is(Tp == class)) {
+	static if (is(Tp == class) || is (Tp == interface)) {
 		alias pointerType = Tp;
 	}
 	else { 
@@ -69,6 +69,9 @@ unittest {
 	struct B {
 
 	}
+	interface C {
+
+	}
 	assert(is(baseType!A == A));
 	assert(is(baseType!(A*) == A));
 	assert(is(baseType!(A**) == A));
@@ -78,16 +81,26 @@ unittest {
 	assert(is(baseType!(B*) == B));
 	assert(is(baseType!(B**) == B));
 	assert(is(baseType!(B***) == B));
-	
-	assert(is(pointerType!B == B*));
-	assert(is(pointerType!(B*) == B*));
-	assert(is(pointerType!(B**) == B*));
-	assert(is(pointerType!(B***) == B*));
+
+	assert(is(baseType!C == C));
+	assert(is(baseType!(C*) == C));
+	assert(is(baseType!(C**) == C));
+	assert(is(baseType!(C***) == C));
 
 	assert(is(pointerType!A == A));
 	assert(is(pointerType!(A*) == A));
 	assert(is(pointerType!(A**) == A));
 	assert(is(pointerType!(A***) == A));
+
+	assert(is(pointerType!B == B*));
+	assert(is(pointerType!(B*) == B*));
+	assert(is(pointerType!(B**) == B*));
+	assert(is(pointerType!(B***) == B*));
+
+	assert(is(pointerType!C == C));
+	assert(is(pointerType!(C*) == C));
+	assert(is(pointerType!(C**) == C));
+	assert(is(pointerType!(C***) == C));
 }
 
 void parallelRange(int works, T, R)(T t, R range) {

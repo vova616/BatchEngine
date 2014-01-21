@@ -10,7 +10,7 @@ class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
 
 	public static ComponentStorage get(T)() {
-		return StorageImpl!T.it;
+		return StorageImpl!(baseType!T).it;
 	}
 
 	public static ComponentStorage[] getDeep(T)() {
@@ -24,21 +24,22 @@ class ComponentStorage {
 		return storages;
 	}
 
-	public static ConstArray!(StorageImpl!T.Tp) components(T)() {
-		return ConstArray!(StorageImpl!T.Tp)(StorageImpl!T.active);
-	}
+	public static ConstArray!(pointerType!T) components(T)() {
+		return ConstArray!(pointerType!T)(StorageImpl!(baseType!T).active);
+	}	
 	
-	public static ConstArray!(StorageImpl!T.Tp)[] componentsDeep(T)() {
+	public static ConstArray!(pointerType!T)[] componentsDeep(T)() {
+		alias U = pointerType!T;
 		static if (is(T == struct)) {
 			//struct cannot have/be inhereted.
 			return [ components!T() ];
 		} else {	
-			ConstArray!(T)[] comps = null;
+			ConstArray!(U)[] comps = null;
 			foreach (s; Storages.values) {
 				void* dummy = cast(void*)1;
 				//checking if its possible to cast the value to T.
 				if (cast(void*)s.Cast!T(dummy) !is null) {	
-					comps ~= cast(ConstArray!(T))s.Components();
+					comps ~= cast(ConstArray!U)s.Components();
 				}
 			}		
 			return comps;
@@ -90,17 +91,9 @@ class ComponentStorage {
 		assert(0, "T is not function");
 	}
 	
-	public T Cast(T)(void* component) if (is(T == class) || is(T == interface)) {
-		return cast(T)TypeCast(typeid(T), component);
+	public auto Cast(T)(void* component)  {
+		return cast(pointerType!T)TypeCast(typeid(pointerType!T), component);
 	}	
-
-	public T* Cast(T)(void* component) if (is(T == struct)) {
-		return cast(T*)TypeCast(typeid(T*), component);
-	}	
-	
-	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
-		return cast(T*)TypeCast(typeid(T*), component);
-	}
 	
 	abstract TypeInfo Type();
 	abstract void* TypeCast(TypeInfo type, void* component);

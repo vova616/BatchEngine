@@ -282,7 +282,7 @@ class Energy  {
 		this.energy = energy;
 		if (this.energy <= 0) {
 			this.energy = 0;
-			Core.RemoveEntity(this.entity);
+			this.entity.Destory();
 		}
 		auto size = Size();
 		transform.scale = vec3(size,size,size);

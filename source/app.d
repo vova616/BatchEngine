@@ -42,8 +42,8 @@ class CollisionSystem : System {
 		auto ac = cast(Collider)a;
 		auto bc = cast(Collider)b;
 		if (ac.Collide(bc)) {
-			//ac.entity.SendMessage("OnCollision", bc);
-			//bc.entity.SendMessage("OnCollision", ac);
+			ac.entity.SendMessage("OnCollision", bc);
+			bc.entity.SendMessage("OnCollision", ac);
 		}
 		return 0;
 	}

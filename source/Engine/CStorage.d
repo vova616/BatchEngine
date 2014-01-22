@@ -65,6 +65,10 @@ class ComponentStorage {
 		}
 	}
 
+	public void RunFunction(Args...)(string name, Args args) {
+		RunFunction!(void delegate(Args))(name, args);
+	}
+	
 	public T FindFunction(T)(string name) {
 		static if (isSomeFunction!T) {
 			static if (is(T == delegate)) {

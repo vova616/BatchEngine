@@ -40,12 +40,12 @@ class Entity
 		return ConstArray!Component(components);	
 	};
 	
-	public void SendMessage(string op, void* arg) {
-		//foreach( c; components) {
-		//	c.OnMessage(op, arg);
-		//}
+	public void SendMessage(Args...)(string name, Args args) {
+		foreach( c; components) {
+			c.RunFunction(name, args);
+		}
 	}
-
+	
 	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);

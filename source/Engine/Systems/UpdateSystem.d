@@ -1,18 +1,30 @@
 module Engine.Systems.UpdateSystem;
 
 import Engine.System;
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Entity;
 
-import Engine.Systems.SimpleSystem;
-
-class UpdateSystem : SimpleSystem {
+class UpdateSystem : System {
    
-	override bool check(Component c) {
-		return c.hasUpdate;
+	override void start() {
+		
+	}
+	
+	override void process() {
+		foreach(cs ; ComponentStorage.all()) {
+			cs.RunFunction!(void delegate())("Update");
+		}
 	}
 
-	override void process(Component c) {
-		c.Update();
+	@property override Timing timing() { 
+		return Timing.Update;
+	}
+	
+	override void onEntityEnter(Entity e) {
+
+	}
+	
+	override void onEntityLeave(Entity e) {
+		
 	}
 }

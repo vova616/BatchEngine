@@ -5,6 +5,8 @@ import Engine.System;
 import Engine.Component;
 import Engine.Entity;
 
+import std.stdio;
+
 class AwakeSystem : System {
 
 	override void start() {
@@ -15,10 +17,13 @@ class AwakeSystem : System {
 
 	}
 
+	@property override Timing timing() { 
+		return Timing.Awake;
+	}
+
 	override void onEntityEnter(Entity e) {
-		foreach(c2 ; e.Components) {
-            auto c = cast(Component)c2;
-            c.Awake();
+		foreach(c ; e.Components) {
+			c.RunFunction!(void delegate())("Awake");
         }
 	}
 

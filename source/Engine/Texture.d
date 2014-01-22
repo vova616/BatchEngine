@@ -200,7 +200,6 @@ class Texture : ITexture {
 				break;
 			default:
 				throw new Exception("Cannot this handle pixel type.");
-				break;
 		}
 	
 		SetFiltering(GL_NEAREST,GL_NEAREST);	

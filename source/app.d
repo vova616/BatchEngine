@@ -19,53 +19,61 @@ Camera camera;
 Texture ballTexture;
 
 import std.parallelism;
+import std.datetime;
+import Engine.util;
 
 class CollisionSystem : System {
 	BBTree tree;
 
-    override void start() {
-		tree = new BBTree(null);
-    }
+	@property override Timing timing() { 
+		return Timing.Update;
+	}
 
-    override void process() {
-        tree.ReindexQuery(&checkCollision);
-    } 
+	
+	override void start() {
+		tree = new BBTree(null);
+	}
+
+	override void process() {
+		tree.ReindexQuery(&checkCollision);
+	} 
 
 	ulong checkCollision(Indexable a,Indexable b, ulong collisionID) {
 		auto ac = cast(Collider)a;
 		auto bc = cast(Collider)b;
 		if (ac.Collide(bc)) {
-			ac.entity.SendMessage("OnCollision", cast(void*)bc);
-			bc.entity.SendMessage("OnCollision", cast(void*)ac);
+			//ac.entity.SendMessage("OnCollision", bc);
+			//bc.entity.SendMessage("OnCollision", ac);
 		}
 		return 0;
 	}
 
-    override void onEntityEnter(Entity e) {
-        foreach(c2 ; e.Components) {
-            auto c = cast(Component)c2;
-            auto collider = c.Cast!Collider();
+	override void onEntityEnter(Entity e) {
+		foreach(c2 ; e.Components) {
+			auto c = cast(Component)c2;
+			auto collider = c.Cast!Collider();
 			if (collider !is null) {
 				tree.Insert(collider);
 			}
-        }
-    }
+		}
+	}
 
 	override void onEntityLeave(Entity e) {
 		
-    }
+	}
 }
 
 
 struct CollisionData {
-	public:
-		vec2 point;
-		vec2 normal;
-		Entity a;
-		Entity b;
+public:
+	vec2 point;
+	vec2 normal;
+	Entity a;
+	Entity b;
 }
 
-class Collider : Component, Indexable {
+class Collider : Indexable {
+	mixin ComponentBase;
 	enum Type {
 		Box,
 		Circle,
@@ -81,7 +89,7 @@ class Collider : Component, Indexable {
 class BoxCollider : Collider {
 	rect bb;
 	
-	override void Awake() {
+	void Awake() {
 		bb = rect(transform.scale.x,transform.scale.y);
 	}
 
@@ -108,7 +116,7 @@ class BoxCollider : Collider {
 class CircleCollider : Collider {
 	float radius;
 
-	override void Update() {
+	void Update() {
 		if (transform.scale.x > transform.scale.y)
 			radius = transform.scale.x/2f;
 		else 
@@ -140,15 +148,17 @@ class CircleCollider : Collider {
 	}
 }
 
-class LifeController : Component {
+class LifeController {
+	mixin ComponentBase;
+
 	Life life;
 
-	override void Awake() {
+	void Awake() {
 		life = entity.GetComponent!Life();
 		writeln(life is null);
 	}
 
-	override void Update() {
+	void Update() {
 		if (Input.KeyPressDown(Key.MOUSE_BUTTON_1)) {
 			auto mpos = vec3(Core.camera.MouseWorldPosition(),0);
 			auto dir = (transform.position - mpos).xy;
@@ -158,10 +168,11 @@ class LifeController : Component {
 	}
 }
 
-class Rigidbody : Component {
+class Rigidbody  {
+	mixin ComponentBase;
 	vec2 velocity = vec2(0,0);
 
-	override void Update() {
+	void Update() {
 		auto pos = transform.position;
 		auto bounds = camera.bounds();
 		auto min = bounds.min;
@@ -185,12 +196,13 @@ class Rigidbody : Component {
 	}
 }
 
-class Life : Component {
+class Life  {
+	mixin ComponentBase;
 	Energy energy;
 	Rigidbody rigidbody;
 	Collider collider;
 
-	override void Awake() {
+	void Awake() {
 		energy = entity.GetComponent!Energy();
 		rigidbody = entity.GetComponent!Rigidbody();
 		collider = entity.GetComponent!Collider();
@@ -215,35 +227,33 @@ class Life : Component {
 		
 	}
 
-	override void OnMessage(string op, void* arg) {
-		if (op == "OnCollision") {
-			Collider c = cast(Collider)arg;
-			auto e = c.entity.GetComponent!Energy();
-			if (e) {
-				if (energy.Size() > e.Size()) {
-					if (e.energy > 0) {
-						auto cc = cast(CircleCollider)c;
-						auto cc2 = cast(CircleCollider)collider;
+	void OnCollision(Collider c) {
+		auto e = c.entity.GetComponent!Energy();
+		if (e) {
+			if (energy.Size() > e.Size()) {
+				if (e.energy > 0) {
+					auto cc = cast(CircleCollider)c;
+					auto cc2 = cast(CircleCollider)collider;
 
-						//Calculate circle collision distance
-						auto dp = (cc.transform.position.xy-transform.position.xy);
-						auto d = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - (dp.x*dp.x + dp.y*dp.y);
-						auto amount = sqrt(d) * Core.DeltaTime * 5f;
-						
-						//move the target circle
-						c.transform.position += vec3(dp.normalized*amount,0);
+					//Calculate circle collision distance
+					auto dp = (cc.transform.position.xy-transform.position.xy);
+					auto d = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - (dp.x*dp.x + dp.y*dp.y);
+					auto amount = sqrt(d) * Core.DeltaTime * 5f;
+					
+					//move the target circle
+					c.transform.position += vec3(dp.normalized*amount,0);
 
-						//exchange sizes
-						e.AddSize(-amount);
-						energy.AddSize(amount);
-					}
+					//exchange sizes
+					e.AddSize(-amount);
+					energy.AddSize(amount);
 				}
 			}
 		}
 	}
 }
 
-class Energy : Component {
+class Energy  {
+	mixin ComponentBase;
 	float energy;
 	float sizeRatio = 1;
 
@@ -252,7 +262,7 @@ class Energy : Component {
 		this.sizeRatio = ratio;
 	}
 
-	override void Awake() {
+	void Awake() {
 		SetEnergy(energy);
 	}
 
@@ -283,14 +293,14 @@ class Energy : Component {
 		auto size = Size();
 		transform.scale = vec3(size,size,size);
 	}
-		
+	
 	float Size() {
 		return energy * sizeRatio;
 	}
 }
 
-class InputHandle : Component {
-	override void Update() {
+struct InputHandle  {
+	void Update() {
 		if (Input.MouseScroll().y > 0)  {
 			Core.camera.size += 3*Core.DeltaTime;
 			Core.camera.UpdateResolution();
@@ -325,7 +335,7 @@ void run() {
 	auto mmouse = new Entity();
 	//mmouse.AddComponent!(Sprite)(ballTexture);
 	mmouse.transform.scale = vec3(100, 100, 1);
-					
+	
 	float entities = 20;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {

@@ -17,12 +17,14 @@ import Engine.System;
 import Engine.Systems.UpdateSystem;
 import Engine.Systems.AwakeSystem;
 import Engine.Systems.StartSystem;
+import Engine.Systems.BatchSystem;
+import std.algorithm;
 
 public class Core
 {	
 	public static GLFWwindow* window;
 	package static Entity[] entities;
-	package static Batch[] batches;
+	
 	package static System[] systems;
 	public shared static auto width = 800;
 	public shared static auto height = 600;
@@ -38,36 +40,42 @@ public class Core
 	public static void AddEntity(Entity entity) {
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;
+		entity.onActive();
 		foreach (s; systems) {
 			s.onEntityEnter(entity);
 		}
 	}
 
-
+	
 	public static void AddSystem(System s) {
 		systems ~= s;
+		sort!"a.timing < b.timing"(systems);
 		s.start();
 		foreach (e; entities) {
 			s.onEntityEnter(e);
 		}
 	}
 
-
-	public static void AddBatch(Entity entity, Batchable batch) {
-		auto mat = batch.material;
-		foreach(ref b; batches) {
-			if (b.material == mat) {
-				b.Add(entity,batch);
-				return;
+	public static bool RemoveSystem(System system) {
+		foreach (index,s; systems) {
+			if (system == s) {
+				systems[index] = systems[systems.length-1];
+				systems.length--;
+				sort!"a.timing < b.timing"(systems);
+				return true;
 			}
-		}	
-		auto b = new Batch(4, mat);
-		batches ~= b;
-		b.Add(entity, batch);
+		}
+		return false;
 	}
+
+	
+	
 
 	public static void RemoveEntity(Entity entity) {
 		if (entity.inScene) {
+			foreach (s; systems) {
+				s.onEntityLeave(entity);
+			}
 			auto index = entity.arrayIndex;
 			auto replaceEntity = entities[entities.length-1];
 			entities[index] = replaceEntity;
@@ -75,10 +83,6 @@ public class Core
 			entity.arrayIndex = -1;
 			entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
 			entities.length--;
-
-			foreach (s; systems) {
-				s.onEntityLeave(entity);
-			}
 		}
 	}
 
@@ -90,22 +94,22 @@ public class Core
 		systems ~= new AwakeSystem();
 		systems ~= new StartSystem();
 		systems ~= new UpdateSystem();
+		systems ~= new BatchSystem();
+
 		
-
-
 		DerelictGLFW3.load();
 		DerelictGL3.load();
-	
+		
 
 		if(!glfwInit()) 
 			throw new Exception("glfwInit failure");
 
-
+		
 
 		glfwWindowHint(GLFW_VERSION_MAJOR, 2); // Use OpenGL Core v3.2
 		glfwWindowHint(GLFW_VERSION_MINOR, 1);
 
-
+		
 		window = glfwCreateWindow(width,height,"SpaceSim",null,null);
 		if (!window)
 			throw new Exception("Failed to create window."); 
@@ -179,7 +183,7 @@ public class Core
 			}
 			]";	
 
-
+		
 		const auto fragSource = q"[
 			#version 120
 			varying vec2 UV; 
@@ -227,12 +231,6 @@ public class Core
 
 			RunCoroutines();
 
-			t1.start();
-			foreach (ref b; batches) {
-				b.Update();
-				b.Draw();
-			}
-			t1.stop();
 			//writeln("Draw ", cast(double)sw.peek().nsecs / 1000000000);
 			//import core.memory;
 			Input.Update();

@@ -3,21 +3,40 @@ module Engine.Systems.StartSystem;
 import Engine.System;
 import Engine.Component;
 import Engine.Entity;
+import std.algorithm;
 
-import Engine.Systems.SimpleSystem;
+class StartSystem : System {
+	alias Start = void delegate();
+	Start[] comps;
 
-class StartSystem : SimpleSystem {
-
-	override bool check(Component c) {
-		return c.hasStart;
+	override void start() {
+		comps = new Start[10];
+		comps.length = 0;
 	}
 
+
 	override void process() {
-		super.process();
-		components.length = 0;
+		comps.sort!("a.funcptr > b.funcptr")();
+		foreach(c; comps) {
+			c();
+		}
+		comps.length = 0;
     } 
 
-	override void process(Component c) {
-		c.Start();
+	@property override Timing timing() { 
+		return Timing.Start;
+	}
+
+	override void onEntityEnter(Entity e) {
+		foreach(c ; e.Components) {
+			auto d = c.FindFunction!Start("Start");
+			if (d !is null) {
+				comps ~= d;
+			}
+        }
+	}
+
+	override void onEntityLeave(Entity e) {
+
 	}
 }

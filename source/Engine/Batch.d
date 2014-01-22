@@ -4,15 +4,17 @@ import std.stdio;
 import derelict.opengl3.gl;
 import Engine.Buffer;
 import gl3n.linalg;
-import Engine.Component;
+import Engine.CStorage;
 import Engine.Texture;
 import Engine.Material;
 import Engine.Core;
 import engine = Engine.Entity;
+import Engine.Transform;
 import std.parallelism;
 import std.bitmanip;
 import Engine.Allocator;
 import std.datetime;
+import Engine.Component;
 
 struct BatchData {
 	enum Type {
@@ -24,9 +26,9 @@ struct BatchData {
 		Size,
 	}
 
-	this(Batch batch, engine.Entity entity, Batchable batchable,int vertexIndex,int indexIndex,int vertexCount,int indexCount,int totalVertexCount,int totalIndexCount) {
+	this(Batch batch, Transform transform, Batchable batchable,int vertexIndex,int indexIndex,int vertexCount,int indexCount,int totalVertexCount,int totalIndexCount) {
 		this.batch = batch;
-		this.entity = entity;
+		this.transform = transform;
 		this.batchable = batchable;
 		this.vertexIndex = vertexIndex;
 		this.indexIndex = indexIndex;
@@ -42,8 +44,9 @@ struct BatchData {
 	}
 
 	Batch batch;
-	engine.Entity entity;
+	Transform transform;
 	Batchable batchable;
+	size_t batchIndex;
 	int vertexIndex;
 	int indexIndex;
 	int vertexCount;
@@ -190,15 +193,28 @@ class Batch {
 			isize = 2 * (indexIndex + batch.indecies);
 			resize = true;
 		}		
-		//auto b = batchAllocator.allocate();
-		auto b = new BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
-		//*b = BatchData(this,entity,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		auto b = new BatchData(this,entity.transform,batch,vertexIndex,indexIndex,batch.vertecies,batch.indecies,batch.vertecies,batch.indecies);
+		entity.AddComponent(b);
 		Batches ~= b;
+		b.batchIndex = Batches.length-1;
 		vertexIndex += batch.vertecies;
 		indexIndex += batch.indecies;
 		batch.OnBatchSetup(b);
 	}
 
+	void Remove(engine.Entity entity, Batchable batch) {
+		foreach(c;entity.components) {
+			auto b = c.Cast!BatchData();
+			if (b !is null && b.batchable == batch) {
+				DeleteBatches ~= *b;
+				auto bd = Batches[Batches.length-1];
+				Batches[b.batchIndex] = bd;
+				Batches.length--;
+				bd.batchIndex = b.batchIndex;
+				break;
+			}
+		}
+	}
 
 	void Resize(BatchData* batch) {
 		if (vertexIndex + batch.totalVertexCount > vsize || 
@@ -214,7 +230,7 @@ class Batch {
 		}
 	}
 
-	 void Update() {
+	void Update() {
 		 //Checking for resizing/deactiving/etc
 		 for (int i = 0;i<CheckBatches.length;i++) {
 			 auto b = CheckBatches[i];
@@ -301,7 +317,7 @@ class Batch {
 				e.ForceUpdate(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
 				
 				//if (e.updateTransform || 1 == 1) {
-				auto t = e.entity.transform;
+				auto t = e.transform;
 				auto p = t.position;
 				auto r = t.rotation;
 				auto s = t.scale;
@@ -320,7 +336,7 @@ class Batch {
 				e.Update(varr[indx..max],uvarr[indx..max],carr[indx..max],iarr[e.indexIndex..e.indexIndex+e.indexCount],indx);
 
 				//if (e.updateTransform || 1 == 1) {
-				auto t = e.entity.transform;
+				auto t = e.transform;
 				auto p = t.position;
 				auto r = t.rotation;
 				auto s = t.scale;
@@ -370,7 +386,7 @@ class Batch {
 		*/
 	}
 
-	 void Draw() {
+	void Draw() {
 		StopWatch t1;
 		t1.start();
 		material.render(this);

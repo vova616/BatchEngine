@@ -37,29 +37,21 @@ https://www.youtube.com/watch?v=uxigpoS9BZI
 
 Basicly you can use both Systems and Components for your game functionality, systems are just processors for anything you want. 
 
-For now there are few systems:
+For now there are few built in systems:
 - AwakeSystem - calling "void Awake()" only once when added entity to game.
 - StartSystem - callind "void Start()" only once during game loop.
 - UpdateSystem - callind "void Update()" each game loop.
-- BatchSystem - the batching system (currently is not written as a system).
-There will be more systems but thats it for now.
+- BatchSystem - the batch rendering system.
 
-You can create your own systems just look on the ones above.
+There will be more systems but thats it for now, you can create your own systems pretty easily just look on the ones above.
 
 ### Components
 
-Component can be struct/class but you must follow the guideline. <br/>
-Here is the same component written in 3 different ways.
-
-	class Gravity : Component {
-		override void Update() {
-			transform.position += vec3(0,-9.8f,0) * Core.DeltaTime;
-		}
-	}
+Component can be struct/class, Here is the same component written in 3 different ways. <br/>
 
 	class Gravity {
-		mixin ComponentBase;
-		void Update() {
+	    mixin ComponentBase;
+		override void Update() {
 			transform.position += vec3(0,-9.8f,0) * Core.DeltaTime;
 		}
 	}
@@ -70,15 +62,32 @@ Here is the same component written in 3 different ways.
 			transform.position += vec3(0,-9.8f,0) * Core.DeltaTime;
 		}
 	}
-	
-	
+
 	...
 	auto entity = new Entity();
 	entity.AddComponent!(Gravity)();
 	//or
 	entity.AddComponent(new Gravity());
 	Core.AddEntity(entity);
+
+You can also add component that does not use mixing, but you wont be able to access to entity easily.
+
+	struct Gravity {
+		Transform transform;
+		this(Entity entity) {
+			this.transform = entity.transform;
+		}
+		void Update() {
+			transform.position += vec3(0,-9.8f,0) * Core.DeltaTime;
+		}
+	}
+	auto entity = new Entity();
+	entity.AddComponent!(Gravity)(entity);
+	//or
+	entity.AddComponent(new Gravity(entity));
+	Core.AddEntity(entity);
 	
+
 ### Dependencies
 -	gl3n
 -	derelict-fi

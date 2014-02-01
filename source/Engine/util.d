@@ -40,6 +40,8 @@ template remove(ArrTy, IntTy) {
 	}
 }
 
+public import std.traits : isPointer;
+
 template baseType(T : T*) {
 	static if (!is(baseType!T == T)) {
 		alias baseType = baseType!T;

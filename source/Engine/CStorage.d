@@ -126,7 +126,7 @@ class StorageImpl(T) : ComponentStorage {
 		bool active;
 	}	
 
-	package static __gshared Tp[] storage = new Tp[8]; 
+	package static __gshared Tp[] storage; 
 	package static __gshared size_t totalIndex = 0;
 	package static __gshared size_t activeIndex = 0;
 	package static __gshared EPair[Tp] map;
@@ -156,7 +156,11 @@ class StorageImpl(T) : ComponentStorage {
 
 	public static void Bind(Tp component, Entity entity) {
 		if (totalIndex >= storage.length) {
-			storage.length *= 2;
+			if (storage.length == 0) {
+				storage.length = 8;
+			} else {
+				storage.length *= 2;
+			}
 		}
 		storage[totalIndex] = component;
 		map[component] = EPair(entity,totalIndex,false);

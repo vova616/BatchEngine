@@ -12,7 +12,7 @@ class ComponentStorage {
 	public int bitIndex = -1;
 
 	public static ComponentStorage get(T)() {
-		return StorageImpl!T.it;
+		return StorageImpl!(baseType!T).it;
 	}
 
 	public static ComponentStorage[] getDeep(T)() {
@@ -26,21 +26,22 @@ class ComponentStorage {
 		return storages;
 	}
 
-	public static ConstArray!(StorageImpl!T.Tp) components(T)() {
-		return ConstArray!(StorageImpl!T.Tp)(StorageImpl!T.active);
-	}
+	public static ConstArray!(pointerType!T) components(T)() {
+		return ConstArray!(pointerType!T)(StorageImpl!(baseType!T).active);
+	}	
 	
-	public static ConstArray!(StorageImpl!T.Tp)[] componentsDeep(T)() {
+	public static ConstArray!(pointerType!T)[] componentsDeep(T)() {
+		alias U = pointerType!T;
 		static if (is(T == struct)) {
 			//struct cannot have/be inhereted.
 			return [ components!T() ];
 		} else {	
-			ConstArray!(T)[] comps = null;
+			ConstArray!(U)[] comps = null;
 			foreach (s; Storages.values) {
 				void* dummy = cast(void*)1;
 				//checking if its possible to cast the value to T.
 				if (cast(void*)s.Cast!T(dummy) !is null) {	
-					comps ~= cast(ConstArray!(T))s.Components();
+					comps ~= cast(ConstArray!U)s.Components();
 				}
 			}		
 			return comps;
@@ -66,6 +67,10 @@ class ComponentStorage {
 		}
 	}
 
+	public void RunFunction(Args...)(string name, Args args) {
+		RunFunction!(void delegate(Args))(name, args);
+	}
+	
 	public T FindFunction(T)(string name) {
 		static if (isSomeFunction!T) {
 			static if (is(T == delegate)) {
@@ -92,17 +97,9 @@ class ComponentStorage {
 		assert(0, "T is not function");
 	}
 	
-	public T Cast(T)(void* component) if (is(T == class) || is(T == interface)) {
-		return cast(T)TypeCast(typeid(T), component);
+	public auto Cast(T)(void* component)  {
+		return cast(pointerType!T)TypeCast(typeid(pointerType!T), component);
 	}	
-
-	public T* Cast(T)(void* component) if (is(T == struct)) {
-		return cast(T*)TypeCast(typeid(T*), component);
-	}	
-	
-	public T* Cast(T : T*)(void* component) if (is(T == struct)) {
-		return cast(T*)TypeCast(typeid(T*), component);
-	}
 	
 	abstract TypeInfo Type();
 	abstract void* TypeCast(TypeInfo type, void* component);
@@ -132,6 +129,7 @@ class StorageImpl(T) : ComponentStorage {
 	}	
 
 	package static __gshared Tp[] storage; 
+	package static __gshared size_t totalIndex = 0;
 	package static __gshared size_t activeIndex = 0;
 	package static __gshared EPair[Tp] map;
 	package static __gshared int _bitIndex = -1;
@@ -171,11 +169,17 @@ class StorageImpl(T) : ComponentStorage {
 	};	
 
 	public static void Bind(Tp component, Entity entity) {
-		if (!_it) {
-			init();
-		}	
-		storage ~= component;
-		map[component] = EPair(entity,storage.length-1,false);
+		if (totalIndex >= storage.length) {
+			if (storage.length == 0) {
+				init();
+				storage.length = 8;
+			} else {
+				storage.length *= 2;
+			}
+		}
+		storage[totalIndex] = component;
+		map[component] = EPair(entity,totalIndex,false);
+		totalIndex++;
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	
@@ -249,10 +253,10 @@ class StorageImpl(T) : ComponentStorage {
 	public static void Remove(Tp component) {
 		auto epair = map[component];
 		map.remove(component);
-		if (epair.index != storage.length-1) {
+		if (epair.index != totalIndex-1) {
 			auto dstIndex = epair.index;
 			auto srcIndex = activeIndex-1;
-			if (epair.active && activeIndex != storage.length) {
+			if (epair.active && activeIndex != totalIndex) {
 				//Replace with last active	
 				if (dstIndex != srcIndex) {
 					auto component2 = storage[srcIndex];
@@ -263,7 +267,7 @@ class StorageImpl(T) : ComponentStorage {
 					dstIndex = srcIndex;
 				}			
 			}	
-			srcIndex = storage.length-1;
+			srcIndex = totalIndex-1;
 			//Replace with the last element
 			auto component2 = storage[srcIndex];
 			auto epair2 = &map[component2];
@@ -273,7 +277,10 @@ class StorageImpl(T) : ComponentStorage {
 		if (epair.active) {
 			activeIndex--;
 		}
-		storage.length--;
+		totalIndex--;
+		if (totalIndex > 0 && totalIndex == storage.length / 4) {
+			storage.length /= 2;
+		}
 	}
 	
 	public static Tp Clone(Tp component) {

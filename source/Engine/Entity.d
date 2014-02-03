@@ -43,6 +43,12 @@ class Entity
 		return ConstArray!Component(components);	
 	};
 	
+	public void SendMessage(Args...)(string name, Args args) {
+		foreach( c; components) {
+			c.RunFunction(name, args);
+		}
+	}
+	
 	public auto AddComponent(T, Args...)(Args args)  {
 		auto t = StorageImpl!(T).allocate(args);
 		components ~= new Component(t);
@@ -72,24 +78,17 @@ class Entity
 		}
 		componentsBits[bit] = flag;
 	}
-	
-	public T GetComponent(T)() {
+
+	public auto GetComponent(T)() {
+		alias Tp = pointerType!T;
 		foreach( c; components) {
-			T t = c.Cast!T();
+			auto t = c.Cast!Tp();
 			if (t !is null) {
 				return t;
 			}
 		}
 		return null;
 	}
-	
-	public Component GetComponent()(Component component)  {
-		foreach( c; components) {
-			if (component.component == c.component)
-				return c;
-		}	
-		return null;
-	}	
 
 	public Entity Clone()
 	{		
@@ -145,20 +144,24 @@ class Entity
 	}	
 
 	public bool RemoveComponents(T)() {
-		alias Tp = StorageImpl!(T).Tp;
 		auto found = false;
+		auto left = 0;
 		for (int i=0;i<components.length;i++) {
 			auto component = components[i];
-			if (component.Cast!Tp() !is null) {
+			if (component.Cast!T() !is null) {
+				if (found && component.storage == StorageImpl!(T).it) {
+					left++;
+					continue;
+				}
 				components[i] = components[components.length-1];
 				components.length--;	
-				StorageImpl!(T).Remove(cast(Tp)component.component);
-				if (!found) {
-					setComponentBit(StorageImpl!(T)._bitIndex, false);
-				}	
+				component.storage.Remove(component.component);	
 				found = true;
 			}
 		}	
+		if (found && left == 0) {
+			setComponentBit(StorageImpl!(T)._bitIndex, false);
+		}			
 		return found;
 	}
 }

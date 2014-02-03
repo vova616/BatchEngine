@@ -49,6 +49,10 @@ class Component {
 		}
 	}
 
+	public void RunFunction(Args...)(string name, Args args) {
+		RunFunction!(void delegate(Args))(name,args);
+	}
+
 	public T FindFunction(T)(string name) {
 		auto fnc = storage.FindFunction!T(name);
 		static if (is(T == delegate)) {
@@ -69,17 +73,9 @@ class Component {
 		return found;
 	}
 
-	public T Cast(T)() if (is(T == class) || is(T == interface)) {
+	public auto Cast(T)() {
 		return storage.Cast!T(component);
 	}	
-
-	public T* Cast(T)() if (is(T == struct)) {
-		return storage.Cast!T(component);
-	}	
-
-	public T* Cast(T : T*)(v) if (is(T == struct)) {
-		return storage.Cast!T(component);
-	}		
 }
 
 template ComponentBase()

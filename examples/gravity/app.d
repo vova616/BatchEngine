@@ -1,9 +1,7 @@
 module main;
 
 import std.stdio;
-import derelict.glfw3.glfw3;
 import Engine.all;
-import derelict.opengl3.gl;
 import std.conv;
 import std.random;
 import Engine.Material;
@@ -261,9 +259,9 @@ void main(string[] args) {
 void run() {
 	Core.Start();
 
-	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
-	ballTexture = new Texture("./public/sprite.png\0");
-	ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
+	Font t = new Font("./../../public/arial.ttf\0", 32, Font.ASCII);
+	ballTexture = new Texture("./../../public/sprite.png\0");
+	//ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
 	Core.AddSystem(new GravitySystem());
 

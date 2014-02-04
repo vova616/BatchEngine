@@ -7,6 +7,8 @@
 	"authors": [
 		"Vovchik"
 	],
+	"sourcePaths" : ["Engine"],
+	"importPaths" : ["Engine"],
 	"dependencies": {
 		"gfm:math": "~master",
 		"derelict-fi": "~master",
@@ -17,12 +19,24 @@
 	"configurations": [
 		{
 			"name": "application",
-			"targetType": "executable",
+			"targetType": "library",
 		},
 		{
 			"name": "build",
 			"targetType": "executable",
 			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops"],
+		},	
+		{
+			"name": "gravity",
+			"targetType": "executable",
+			"sourcePaths" : ["./examples/gravity/"],
+			"targetPath" : "./examples/gravity/",
 		},
-	]
+		{
+			"name": "life",
+			"targetType": "executable",
+			"sourcePaths" : ["./examples/life/"],
+			"targetPath" : "./examples/life/",
+		},
+	],
 }

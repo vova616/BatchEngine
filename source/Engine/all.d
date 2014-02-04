@@ -10,7 +10,6 @@ public import Engine.Input;
 public import Engine.Font;
 public import Engine.Sprite;
 public import Engine.Camera;
-public import gl3n.linalg;
 public import Engine.Coroutine;
 public import Engine.Buffer;
 public import Engine.Batch;

@@ -1,12 +1,12 @@
 module Engine.Buffer;
 
 import derelict.opengl3.gl;
-import gl3n.linalg;
+import Engine.math;
 import std.stdio;
 import Engine.Options;
 
 class Buffer {
-    GLenum type;
+	GLenum type;
 	GLenum memtype;
 	GLenum buffer;
 
@@ -38,27 +38,32 @@ class Buffer {
 		this(cast(int)size, type, memtype);
 	}
 
-	final void Resize(long size) {
+	final
+	void Resize(long size) {
 		Resize(cast(int)size);
 	}
 
-	final void Resize(int size) {
+	final
+	void Resize(int size) {
 		this.size = size;
 		glBindBuffer(type, buffer);	
 		glBufferData(type, size, null, memtype);
 	}
 
-	final void Bind()() {
+	final
+	void Bind()() {
 		glBindBuffer(type, buffer);
 	}
 
-	final void Unbind()() {
+	final
+	void Unbind()() {
 		glBindBuffer(type, 0);
 	}
 
-	void Update(T)(T[] arr, int offset = 0)
-	{
-		if (T.sizeof * arr.length + offset * T.sizeof > size) {
+	void Update(T)(T[] arr, int offset = 0) {
+		if (T.sizeof * arr
+		.length + offset * T.sizeof > size
+		) {
 			throw new Exception("array type is too big for this buffer");
 		}
 
@@ -68,7 +73,8 @@ class Buffer {
 
 	void Update(T)(void delegate(T[] arr) update) {
 		auto arr = Map!T();
-		scope( exit ) Unmap();
+		scope( exit )
+		Unmap();
 		update(arr);
 	}
 
@@ -124,4 +130,5 @@ class Buffer {
 		Bind();
 		glUnmapBuffer(type);
 	}
+
 }

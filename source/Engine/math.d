@@ -1,7 +1,16 @@
 module Engine.math;
 
-public import gl3n.linalg;
+public import gfm.math.vector;
+public import gfm.math.matrix;
+public import std.algorithm : min,max;
 import std.traits;
+
+alias vec2 = vec2f;
+alias vec3 = vec3f;
+alias vec4 = vec4f;
+
+alias mat4 = mat4f;
+alias mat3 = mat3f;
 
 struct dirty(T) {
 	bool dirty = true;
@@ -68,7 +77,7 @@ alias Rect!(int) recti;
 alias Rect!(float) rect;
 
 struct Rect(T) {
-	alias Vector!(T, 2) vectp;
+	alias vectp = Vector!(T,2);
 	vectp min = vectp(0,0);
 	vectp max = vectp(0,0);
 

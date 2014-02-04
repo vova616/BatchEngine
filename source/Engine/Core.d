@@ -2,7 +2,7 @@ module Engine.Core;
 
 import derelict.glfw3.glfw3;
 import derelict.opengl3.gl;
-public import gl3n.linalg;
+import Engine.math;
 import Engine.Entity;
 import std.datetime;
 import std.stdio;
@@ -20,44 +20,62 @@ import Engine.Systems.StartSystem;
 import Engine.Systems.BatchSystem;
 import std.algorithm;
 
-public class Core
-{	
-	public static GLFWwindow* window;
-	package static Entity[] entities;
+public
+class Core {	
+	public
+	static
+	GLFWwindow* window;
+	package
+	static
+	Entity[] entities;
 	
-	package static System[] systems;
+	package
+	static
+	System[] systems;
 	public shared static auto width = 800;
 	public shared static auto height = 600;
-	static Camera camera;
-	static Shader shader;
+	static
+	Camera camera;
+	static
+	Shader shader;
 
-	public shared static double DeltaTime;
+	public shared
+	static
+	double DeltaTime;
 
-	public static size_t EntitiesCount() {
+	public
+	static
+	size_t EntitiesCount() {
 		return entities.length;
 	}
 
-	public static void AddEntity(Entity entity) {
+	public
+	static
+	void AddEntity(Entity entity) {
 		entities ~= entity;
 		entity.arrayIndex = entities.length-1;
 		entity.onActive();
-		foreach (s; systems) {
+		foreach ( s; systems) {
 			s.onEntityEnter(entity);
 		}
 	}
-
 	
-	public static void AddSystem(System s) {
+	public
+	static
+	void AddSystem(System s) {
 		systems ~= s;
 		sort!"a.timing < b.timing"(systems);
 		s.start();
-		foreach (e; entities) {
+		foreach ( e; entities) {
 			s.onEntityEnter(e);
 		}
 	}
 
-	public static bool RemoveSystem(System system) {
-		foreach (index,s; systems) {
+	public
+	static
+	bool RemoveSystem(System system) {
+		foreach ( index,
+			s; systems) {
 			if (system == s) {
 				systems[index] = systems[systems.length-1];
 				systems.length--;
@@ -68,12 +86,11 @@ public class Core
 		return false;
 	}
 
-	
-	
-
-	public static void RemoveEntity(Entity entity) {
+	public
+	static
+	void RemoveEntity(Entity entity) {
 		if (entity.inScene) {
-			foreach (s; systems) {
+			foreach ( s; systems) {
 				s.onEntityLeave(entity);
 			}
 			auto index = entity.arrayIndex;
@@ -86,8 +103,9 @@ public class Core
 		}
 	}
 
-	public static void Start()
-	{
+	public
+	static
+	void Start() {
 		entities = new Entity[100];
 		entities.length = 0;
 
@@ -138,12 +156,14 @@ public class Core
 		//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		//glLineWidth(5);
 
-		foreach (s; systems) {
+		foreach ( s; systems) {
 			s.start();
 		}
 	}
 
-	private static void initShaders() {
+	private
+	static
+	void initShaders() {
 		const auto vertexSource = q"[
 			#version 120
 			// Input vertex data, different for all executions of this shader.
@@ -200,17 +220,18 @@ public class Core
 		Core.shader = shader;
 	}
 
-	public static void Terminate()
-	{
+	public
+	static
+	void Terminate() {
 		glfwTerminate() ; 
 	}
 
-	public static void Run()
-	{
+	public
+	static
+	void Run() {
 		StopWatch sw;
 		sw.start();
-		while (!glfwWindowShouldClose(window)) 
-		{ 		
+		while (!glfwWindowShouldClose(window)) { 		
 			DeltaTime = cast(double)sw.peek().nsecs / 1000000000;	
 			sw.reset();
 
@@ -223,7 +244,7 @@ public class Core
 			//writeln("START", cast(double)sw.peek().nsecs / 1000000000);
 
 			t1.start();
-			foreach (s; systems) {
+			foreach ( s; systems) {
 				s.process();
 			}
 			t1.stop();
@@ -240,5 +261,6 @@ public class Core
 			//GC.disable();
 		}
 	}
+
 }
 

@@ -3,7 +3,7 @@ module Engine.UI.Label;
 import Engine.Component;
 import Engine.Batch;
 import Engine.Material;
-import gl3n.linalg;
+import Engine.math;
 import Engine.Font;
 import Engine.Core;
 
@@ -12,25 +12,31 @@ class Label : Batchable {
 	// This will identify our vertex buffer
 	string text;
 	Font font;
-	package vec4 _color = vec4(1,1,1,1);
+	package
+	vec4 _color = vec4(1,1,1,1);
 
 
 	Material _material;
 
-	@property Material material() {
+	@property
+	Material material() {
 		return _material;
-	};
+	}
 
 		
-	@property ref vec4 color() {
+	@property
+	ref
+	vec4 color() {
 		if (batchData !is null) {
 			batchData.MarkCheck(BatchData.Type.Color);
 		}
 		return _color;
 	}
 
-	package int actualSize;
-	package BatchData* batchData;
+	package
+	int actualSize;
+	package
+	BatchData* batchData;
 
 	this(Font f,string text) {
 		this.text = text;
@@ -42,19 +48,21 @@ class Label : Batchable {
 	void OnBatchSetup(BatchData* data) {
 		batchData = data;
 	}
-
 	
-	@property int vertecies() {
+	@property
+	int vertecies() {
 		return actualSize*4;	
-	};
-	@property int indecies() {
+	}
+;
+	@property
+	int indecies() {
 		return actualSize*6;	
 	};
 
 	vec2 GetPixelSize(string text ) {
 		auto index = 0;
 		vec2 size = vec2(0,0);
-		foreach (chr; text) {
+		foreach ( chr; text) {
 			auto spaceMult = 1;
 
 			auto letterInfoPTR = chr in font.Map;
@@ -84,18 +92,17 @@ class Label : Batchable {
 		return size;
 	}
 
-
 	void SetText(string text) {
 		this.text = text;
 		auto oldSize = actualSize;
 		actualSize = 0;
-		foreach(chr; text) {
+		foreach( chr; text) {
 			auto letterInfo = chr in font.Map;
 			if (letterInfo !is null) {
 				actualSize++;
 			}
 		}
-		if (batchData !is null)  {
+		if (batchData !is null) {
 			batchData.MarkCheck(BatchData.Type.UV, BatchData.Type.Vertex);
 			if ( oldSize != actualSize) {
 				batchData.MarkCheck(BatchData.Type.Size);
@@ -116,7 +123,7 @@ class Label : Batchable {
 		int index = 0;
 
 		auto size = GetPixelSize(text);
-		foreach(chr; text) {
+		foreach( chr; text) {
 			auto letterInfo = chr in font.Map;
 			if (letterInfo is null) {
 				space += 0.5;
@@ -163,4 +170,6 @@ class Label : Batchable {
 			index++;
 		}
 	}
+
 }
+

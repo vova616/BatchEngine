@@ -1,12 +1,13 @@
 module Engine.Input;
 
 import Engine.Core;
+import Engine.math;
 import derelict.glfw3.glfw3;
 
 public static class Input
 {
 	package static shared state[int] keysState;
-	package static __gshared vec2 mousePos = vec2i(0,0);
+	package static __gshared vec2 mousePos = vec2(0,0);
 	package static __gshared vec2 mouseScroll = vec2(0,0);
 
 	package enum state {

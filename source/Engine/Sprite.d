@@ -9,34 +9,44 @@ import Engine.Batch;
 import Engine.Input;
 import Engine.Material;
 import Engine.Shader;
+import Engine.math;
 import std.stdio;
 
 class Sprite : Batchable {
 	mixin ComponentBase;
 
-	package vec4 _color = vec4(1,1,1,1);
-	package BatchData* batch;
+	package
+	vec4 _color = vec4(1,1,1,1);
+	package
+	BatchData* batch;
 	Material _material;
 
-	@property Material material() {
+	@property
+	Material material() {
 		return _material;
 	};
 
-	@property int vertecies() {
+	@property
+	int vertecies() {
 		return 4;	
-	};
-	@property int indecies() {
+	}
+;
+	@property
+	int indecies() {
 		return 6;	
 	};
 		
-	@property ref vec4 color() {
+	@property
+	ref
+	vec4 color() {
 		if (batch !is null) {
 			batch.MarkCheck(BatchData.Type.Color);
 		}
 		return _color;
 	}
 
-	public void OnComponentAdd() {
+	public
+	void OnComponentAdd() {
 		entity.sprite = this;
 	}
 
@@ -48,13 +58,11 @@ class Sprite : Batchable {
 		this(texture.GetMaterial());
 	}
 
-
 	void OnBatchSetup(BatchData* data) {
 		batch = data;
 	}
 
-	void UpdateBatch(vec3[] vertex, vec2[] uv, vec4[] color, uint[] index, uint indexPosition)
-	{
+	void UpdateBatch(vec3[] vertex, vec2[] uv, vec4[] color, uint[] index, uint indexPosition) {
 		if (vertex !is null) {
 			vertex[0] = vec3(-0.5f, -0.5f, 0.0f);
 			vertex[1] = vec3(0.5f,  -0.5f, 0.0f);
@@ -82,4 +90,6 @@ class Sprite : Batchable {
 			index[5] = indexPosition+3;
 		}
 	}
+
 }
+

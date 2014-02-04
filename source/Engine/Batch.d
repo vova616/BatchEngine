@@ -3,7 +3,7 @@ module Engine.Batch;
 import std.stdio;
 import derelict.opengl3.gl;
 import Engine.Buffer;
-import gl3n.linalg;
+import Engine.math;
 import Engine.CStorage;
 import Engine.Texture;
 import Engine.Material;
@@ -17,13 +17,12 @@ import std.datetime;
 import Engine.Component;
 
 struct BatchData {
-	enum Type {
-		Transform,
-		UV,
-		Color,
-		Vertex,
-		Index,
-		Size,
+	enum Type { Transform,
+			UV,
+			Color,
+			Vertex,
+			Index,
+			Size,
 	}
 
 	this(Batch batch, Transform transform, Batchable batchable,int vertexIndex,int indexIndex,int vertexCount,int indexCount,int totalVertexCount,int totalIndexCount) {
@@ -73,7 +72,7 @@ struct BatchData {
 			int, "", 2));
 	
 	void MarkCheck(const Type[] types...) {
-		foreach (t;types) {
+		foreach ( t;types) {
 			switch(t) {
 				case Type.Transform:
 					updateTransform = true;
@@ -102,7 +101,8 @@ struct BatchData {
 		}
 	}
 
-	final void Update()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
+	final
+	void Update()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
 		int call = 4;
 		if (!updateUV) {
 			uv = null;
@@ -129,9 +129,11 @@ struct BatchData {
 		}
 	}
 
-	final void ForceUpdate()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
+	final
+	void ForceUpdate()(vec3[] vertex,vec2[] uv, vec4[] color,uint[] index, uint indexPosition) {
 		batchable.UpdateBatch(vertex,uv,color,index,indexPosition);
 	}
+
 }
 
 class Batch {
@@ -174,17 +176,16 @@ class Batch {
 		this.material = material;
 	}
 
-
 	void Rebuild() {
 		vertexIndex = 0;
 		indexIndex = 0;
-		foreach (batch; Batches) {
+		foreach ( batch; Batches) {
 			batch.vertexIndex = vertexIndex;
 			batch.indexIndex = indexIndex;
 			vertexIndex += batch.totalVertexCount;
 			indexIndex += batch.totalIndexCount;
 		}
-	}	
+	}
 
 	void Add(engine.Entity entity, Batchable batch) {
 		if (vertexIndex + batch.vertecies > vsize || 
@@ -203,7 +204,7 @@ class Batch {
 	}
 
 	void Remove(engine.Entity entity, Batchable batch) {
-		foreach(c;entity.components) {
+		foreach( c;entity.components) {
 			auto b = c.Cast!BatchData();
 			if (b !is null && b.batchable == batch) {
 				DeleteBatches ~= *b;
@@ -232,76 +233,78 @@ class Batch {
 
 	void Update() {
 		 //Checking for resizing/deactiving/etc
-		 for (int i = 0;i<CheckBatches.length;i++) {
+		 for (
+		int i = 0;i<CheckBatches.length;i++) {
 			 auto b = CheckBatches[i];
-			 b.updateSize = false;
+			b.updateSize = false;
 
-			 b.updateUV = true;
-			 b.updateColor = true;
-			 b.updateIndex = true;
-			 b.updateVertex = true;
+			b.updateUV = true;
+			b.updateColor = true;
+			b.updateIndex = true;
+			b.updateVertex = true;
 
-			 b.vertexCount = b.batchable.vertecies;
-			 b.indexCount = b.batchable.indecies;
+			b.vertexCount = b.batchable.vertecies;
+			b.indexCount = b.batchable.indecies;
 			 auto tic = b.totalIndexCount;
 		  	 auto ii = b.indexIndex;
 		  	 //Increase vertex size if needed
 			 if (b.vertexCount > b.totalVertexCount || b.indexCount > b.totalIndexCount) {
-				 b.totalVertexCount = b.vertexCount * 2;
-				 b.totalIndexCount = b.indexCount * 2;
-				 Resize(b);
-			 }	
+				b.totalVertexCount = b.vertexCount * 2;
+				b.totalIndexCount = b.indexCount * 2;
+				Resize(b);
+			}	
 			 //Delete batch data if needed
 			 if (!resize ) {
 				DeleteBatches ~= BatchData(null,null,null,0,ii,0,0,0,tic);
-			 }
-		 }			
-		 CheckBatches.length = 0;
+			}
+		}			
+		CheckBatches.length = 0;
 	
 		 //Resizing & rebuilding
-		 bool updateAll = false;
+		bool updateAll = false;
 		 if (resize) {
-		 	 DeleteBatches.length = 0;
-			 vertex.Resize(vsize*vec3.sizeof);
-			 color.Resize(vsize*vec4.sizeof);
-			 uv.Resize(vsize*vec2.sizeof);
-			 index.Resize(isize*int.sizeof);
-			 matrix.Resize(vsize*mat4.sizeof);
-			 resize = false;
-			 updateAll = true;
-			 Rebuild();
-		 }
+			DeleteBatches.length = 0;
+			vertex.Resize(vsize*vec3.sizeof);
+			color.Resize(vsize*vec4.sizeof);
+			uv.Resize(vsize*vec2.sizeof);
+			index.Resize(isize*int.sizeof);
+			matrix.Resize(vsize*mat4.sizeof);
+			resize = false;
+			updateAll = true;
+			Rebuild();
+		}
 		
 		
-		 StopWatch t1;
-		 StopWatch t2;
-		 t2.start();
-		 t1.start();
+		StopWatch t1;
+		StopWatch t2;
+		t2.start();
+		t1.start();
 		 auto varr = vertex.Map!vec3(0, vertexIndex*vec3.sizeof);
 		 auto carr = color.Map!vec4(0, vertexIndex*vec4.sizeof);
 		 auto uvarr = uv.Map!vec2(0, vertexIndex*vec2.sizeof);
 		 auto iarr = index.Map!uint(0, indexIndex*uint.sizeof);
 		 auto matrcies = matrix.Map!(vec3[3])(0, vertexIndex*(vec3[3]).sizeof);
-		 t1.stop();
+		t1.stop();
 		// writeln("buffer map", cast(double)t1.peek().nsecs / 1000000);
 	
-		 uint vindex = 0;
-		 totalIndecies = 0;
+		uint vindex = 0;
+		totalIndecies = 0;
 		 scope(exit) {
-			 t1.start();
-			 vertex.Unmap();
-			 color.Unmap();
-			 uv.Unmap();
-			 index.Unmap();
-			 matrix.Unmap();
-			 t1.stop();
-			 t2.stop();
+			t1.start();
+			vertex.Unmap();
+			color.Unmap();
+			uv.Unmap();
+			index.Unmap();
+			matrix.Unmap();
+			t1.stop();
+			t2.stop();
 			// writeln("buffer unmap", cast(double)t1.peek().nsecs / 1000000);
 			// writeln("batch update", cast(double)t2.peek().nsecs / 1000000);
-		 }
+		}
 
 		//deactiving batches		
-		for (int i = 0;i<DeleteBatches.length;i++) {
+		for (
+		int i = 0;i<DeleteBatches.length;i++) {
 			auto e = &DeleteBatches[i];
 			iarr[e.indexIndex..e.indexIndex+e.totalIndexCount] = 0;
 		}	
@@ -393,13 +396,26 @@ class Batch {
 		t1.stop();
 		//writeln("batch Draw", cast(double)t1.peek().nsecs / 1000000);
 	}
+
 }
 
 interface Batchable {
-	@property Material material();
-	@property int vertecies();
-	@property int indecies();
+	@property
+	Material material()
+
+;
+	@property
+	int vertecies()
+
+;
+	@property
+	int indecies();
 	
-	void OnBatchSetup( BatchData* data);
-	void UpdateBatch(vec3[] vertex, vec2[] uv, vec4[] color, uint[] index, uint indexPosition);
+	void OnBatchSetup( BatchData* data)
+
+;
+	void UpdateBatch(vec3[] vertex, vec2[] uv, vec4[] color, uint[] index, uint indexPosition)
+
+;
 }
+

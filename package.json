@@ -8,7 +8,7 @@
 		"Vovchik"
 	],
 	"dependencies": {
-		"gl3n": "~master",
+		"gfm:math": "~master",
 		"derelict-fi": "~master",
 		"derelict-gl3": "~master",
 		"derelict-glfw3": "~master",

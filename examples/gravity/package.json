@@ -1,6 +1,6 @@
 {
     "name": "batch-engine-example",
-    "description": "BatchEngine life examples",
+    "description": "BatchEngine gravity examples",
     "homepage": "https://github.com/vova616/BatchEngine",
     "copyright": "Copyright © 2013, vova616@gmail.com",
     "license": "MIT",
@@ -8,8 +8,8 @@
 		"Vovchik"
 	],
     "targetType": "executable",
-    "name": "life",
-    "targetName": "life",
+    "name": "gravity",
+    "targetName": "gravity",
     "sourcePaths": [ "." ],
     "importPaths": [ "." ],
     "mainSourceFile": "main.d",

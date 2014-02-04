@@ -32,5 +32,11 @@
 			"sourcePaths" : ["./examples/gravity/"],
 			"targetPath" : "./examples/gravity/",
 		},
+		{
+			"name": "life",
+			"targetType": "executable",
+			"sourcePaths" : ["./examples/life/"],
+			"targetPath" : "./examples/life/",
+		},
 	],
 }

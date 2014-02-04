@@ -27,10 +27,10 @@
 			"dflags": ["-noboundscheck","-release","-O","-vectorize-loops"],
 		},	
 		{
-			"name": "gravity",
+			"name": "life",
 			"targetType": "executable",
-			"sourcePaths" : ["./examples/gravity/"],
-			"targetPath" : "./examples/gravity/",
+			"sourcePaths" : ["./examples/life/"],
+			"targetPath" : "./examples/life/",
 		},
 	],
 }

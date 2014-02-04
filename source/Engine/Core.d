@@ -22,149 +22,116 @@ import std.algorithm;
 
 public
 class Core {	
-	public
-	static
-	GLFWwindow* window;
-	package
-	static
-	Entity[] entities;
-	
-	package
-	static
-	System[] systems;
-	public shared static auto width = 800;
-	public shared static auto height = 600;
-	static
-	Camera camera;
-	static
-	Shader shader;
+    public static GLFWwindow* window;
+    package static Entity[] entities;
+    
+    package static System[] systems;
+    public shared static auto width = 800;
+    public shared static auto height = 600;
+    static Camera camera;
+    static Shader shader;
 
-	public shared
-	static
-	double DeltaTime;
+    public shared static double DeltaTime;
 
-	public
-	static
-	size_t EntitiesCount() {
-		return entities.length;
-	}
+    public static size_t EntitiesCount() {
+        return entities.length;
+    }
 
-	public
-	static
-	void AddEntity(Entity entity) {
-		entities ~= entity;
-		entity.arrayIndex = entities.length-1;
-		entity.onActive();
-		foreach ( s; systems) {
-			s.onEntityEnter(entity);
-		}
-	}
-	
-	public
-	static
-	void AddSystem(System s) {
-		systems ~= s;
-		sort!"a.timing < b.timing"(systems);
-		s.start();
-		foreach ( e; entities) {
-			s.onEntityEnter(e);
-		}
-	}
+    public static void AddEntity(Entity entity) {
+        entities ~= entity;
+        entity.arrayIndex = entities.length-1;
+        entity.onActive();
+        foreach ( s; systems) {
+            s.onEntityEnter(entity);
+        }
+    }
+    
+    public static void AddSystem(System s) {
+        systems ~= s;
+        sort!"a.timing < b.timing"(systems);
+        s.start();
+        foreach ( e; entities) {
+            s.onEntityEnter(e);
+        }
+    }
 
-	public
-	static
-	bool RemoveSystem(System system) {
-		foreach ( index,
-			s; systems) {
-			if (system == s) {
-				systems[index] = systems[systems.length-1];
-				systems.length--;
-				sort!"a.timing < b.timing"(systems);
-				return true;
-			}
-		}
-		return false;
-	}
+    public static bool RemoveSystem(System system) {
+        foreach ( index,
+                 s; systems) {
+            if (system == s) {
+                systems[index] = systems[systems.length-1];
+                systems.length--;
+                sort!"a.timing < b.timing"(systems);
+                return true;
+            }
+        }
+        return false;
+    }   
 
-	public
-	static
-	void RemoveEntity(Entity entity) {
-		if (entity.inScene) {
-			foreach ( s; systems) {
-				s.onEntityLeave(entity);
-			}
-			auto index = entity.arrayIndex;
-			auto replaceEntity = entities[entities.length-1];
-			entities[index] = replaceEntity;
-			replaceEntity.arrayIndex = index;
-			entity.arrayIndex = -1;
-			entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
-			entities.length--;
-		}
-	}
+    public static void RemoveEntity(Entity entity) {
+        if (entity.inScene) {
+            foreach ( s; systems) {
+                s.onEntityLeave(entity);
+            }
+            auto index = entity.arrayIndex;
+            auto replaceEntity = entities[entities.length-1];
+            entities[index] = replaceEntity;
+            replaceEntity.arrayIndex = index;
+            entity.arrayIndex = -1;
+            entities[entities.length-1] = null; //no idea how array resize works, but lets do it safe
+            entities.length--;
+        }
+    }
 
-	public
-	static
-	void Start() {
-		entities = new Entity[100];
-		entities.length = 0;
+    public static void Start() {
+        entities = new Entity[100];
+        entities.length = 0;
 
-		systems ~= new AwakeSystem();
-		systems ~= new StartSystem();
-		systems ~= new UpdateSystem();
-		systems ~= new BatchSystem();
+        systems ~= new AwakeSystem();
+        systems ~= new StartSystem();
+        systems ~= new UpdateSystem();
+        systems ~= new BatchSystem();
 
-		
-		DerelictGLFW3.load();
-		DerelictGL3.load();
-		
+        DerelictGLFW3.load();
+        DerelictGL3.load();
 
-		if(!glfwInit()) 
-			throw new Exception("glfwInit failure");
+        if(!glfwInit()) 
+            throw new Exception("glfwInit failure");
 
-		
+        glfwWindowHint(GLFW_VERSION_MAJOR, 2); // Use OpenGL Core v3.2
+        glfwWindowHint(GLFW_VERSION_MINOR, 1);
 
-		glfwWindowHint(GLFW_VERSION_MAJOR, 2); // Use OpenGL Core v3.2
-		glfwWindowHint(GLFW_VERSION_MINOR, 1);
+        window = glfwCreateWindow(width,height,"SpaceSim",null,null);
+        if (!window)
+            throw new Exception("Failed to create window."); 
 
-		
-		window = glfwCreateWindow(width,height,"SpaceSim",null,null);
-		if (!window)
-			throw new Exception("Failed to create window."); 
-		
-		
+        glfwMakeContextCurrent(window);
+        DerelictGL3.reload(); 
 
-		glfwMakeContextCurrent(window);
-		DerelictGL3.reload(); 
+        glfwSwapInterval(0);		
+        Input.Initialize();
+        
+        if (glMapBufferRange is null) {
+            Options.useMapBufferRange = false;
+        }
 
-		glfwSwapInterval(0);		
-		Input.Initialize();
-		
-		if (glMapBufferRange is null) {
-			Options.useMapBufferRange = false;
-		}
+        glDisable(GL_CULL_FACE);
+        glClearDepth(1);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+        glDepthFunc(GL_NEVER);
+        glEnable(GL_BLEND);
+        glDepthMask(true);
+        initShaders();
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        //glLineWidth(5); 
+        foreach ( s; systems) {
+            s.start();
+        }
+    }   
 
-		glDisable(GL_CULL_FACE);
-		glClearDepth(1);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-		glDepthFunc(GL_NEVER);
-		glEnable(GL_BLEND);
-		glDepthMask(true);
-		initShaders();
-		
-		//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		//glLineWidth(5);
-
-		foreach ( s; systems) {
-			s.start();
-		}
-	}
-
-	private
-	static
-	void initShaders() {
-		const auto vertexSource = q"[
+    private static void initShaders() {
+        const auto vertexSource = q"[
 			#version 120
 			// Input vertex data, different for all executions of this shader.
 			attribute vec2 uv;
@@ -203,8 +170,8 @@ class Core {
 			}
 			]";	
 
-		
-		const auto fragSource = q"[
+        
+        const auto fragSource = q"[
 			#version 120
 			varying vec2 UV; 
 			varying vec4 Color;
@@ -216,51 +183,47 @@ class Core {
 			}
 			]";	
 
-		shader = new Shader(vertexSource, fragSource);
-		Core.shader = shader;
-	}
+        shader = new Shader(vertexSource, fragSource);
+        Core.shader = shader;
+    }
 
-	public
-	static
-	void Terminate() {
-		glfwTerminate() ; 
-	}
+    public static void Terminate() {
+        glfwTerminate() ; 
+    }
 
-	public
-	static
-	void Run() {
-		StopWatch sw;
-		sw.start();
-		while (!glfwWindowShouldClose(window)) { 		
-			DeltaTime = cast(double)sw.peek().nsecs / 1000000000;	
-			sw.reset();
+    public static void Run() {
+        StopWatch sw;
+        sw.start();
+        while (!glfwWindowShouldClose(window)) { 		
+            DeltaTime = cast(double)sw.peek().nsecs / 1000000000;	
+            sw.reset();
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
-			StopWatch t1;
-			t1.start();
+            StopWatch t1;
+            t1.start();
 
-			t1.stop();
-			//writeln("START", cast(double)sw.peek().nsecs / 1000000000);
+            t1.stop();
+            //writeln("START", cast(double)sw.peek().nsecs / 1000000000);
 
-			t1.start();
-			foreach ( s; systems) {
-				s.process();
-			}
-			t1.stop();
-			//writeln("Update ", cast(double)sw.peek().nsecs / 1000000);
+            t1.start();
+            foreach ( s; systems) {
+                s.process();
+            }
+            t1.stop();
+            //writeln("Update ", cast(double)sw.peek().nsecs / 1000000);
 
-			RunCoroutines();
+            RunCoroutines();
 
-			//writeln("Draw ", cast(double)sw.peek().nsecs / 1000000000);
-			//import core.memory;
-			Input.Update();
-			//GC.enable();
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-			//GC.disable();
-		}
-	}
+            //writeln("Draw ", cast(double)sw.peek().nsecs / 1000000000);
+            //import core.memory;
+            Input.Update();
+            //GC.enable();
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            //GC.disable();
+        }
+    }
 
 }
 

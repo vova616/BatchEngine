@@ -8,61 +8,45 @@ import Engine.math;
 
 class Transform {
     mixin ComponentBase;
-    @property
-    ref
-    vec3 Position() {
+    @property ref vec3 Position() {
         updateInvert = true;
         updatePos = true;
         return position;
     };
 
-    @property
-    ref
-    vec3 Scale()() {
+    @property ref vec3 Scale()() {
         updateInvert = true;
         updateScale = true;
         return scale;
     }
     
-    @property
-    ref
-    vec3 Rotation()() {
+    @property ref vec3 Rotation()() {
         updateInvert = true;
         updateRot = true;
         return rotation;
-    };
+    };  
 
     vec3 position = vec3(0,0,0);
     vec3 rotation = vec3(0,0,0);
     vec3 scale = vec3(1,1,1);
 
-    package
-    mat4 matrix;
-    package
-    mat4 translateMatrix;
-    package
-    mat4 scaleMatrix;
-    package
-    mat4 rotateMatrix;
-    package
-    mat4 invertMatrix;
-    package
-    bool updateInvert = true;
-
+    package mat4 matrix;
+    package mat4 translateMatrix;
+    package mat4 scaleMatrix;
+    package mat4 rotateMatrix;
+    package mat4 invertMatrix;
+    package bool updateInvert = true;
     
-    package
-    bool updatePos = true;
-    package
-    bool updateRot = true;
-    package
-    bool updateScale = true;
+    
+    package bool updatePos = true;
+    package bool updateRot = true;
+    package bool updateScale = true;
 
     this() {
 
     }
 
-    public
-    void OnComponentAdd() {
+    public void OnComponentAdd() {
         entity.transform_ = this;
     }
 
@@ -72,15 +56,14 @@ class Transform {
             rotateMatrix = mat4.identity.rotateX(rotation.x).rotateY(rotation.y).rotateZ(rotation.z);
             recalculate = true;
             updateRot = false;
-        }	
+        }	    
         if (updateScale) {
-            scaleMatrix = mat4.identity;
-            scaleMatrix.scale(scale);
+            scaleMatrix = mat4.scaling(scale);
             recalculate = true;
             updateScale = false;
         }
         if (updatePos) {
-            translateMatrix = mat4.identity.translation(position);
+            translateMatrix = mat4.translation(position);
             recalculate = true;
             updatePos = false;
         }
@@ -101,9 +84,8 @@ class Transform {
 
     mat4 Matrix2() {	
         auto r = mat4.identity.rotateX(rotation.x).rotateY(rotation.y).rotateZ(rotation.z);
-        auto s = mat4.identity;
-        s.scale(scale);
-        auto t = mat4.identity.translation(position);
+        auto s = mat4.scaling(scale);
+        auto t = mat4.translation(position);
         return t*r*s;
     }
 

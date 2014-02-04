@@ -1,0 +1,21 @@
+{
+    "name": "batch-engine-example",
+    "description": "BatchEngine gravity examples",
+    "homepage": "https://github.com/vova616/BatchEngine",
+    "copyright": "Copyright © 2013, vova616@gmail.com",
+    "license": "MIT",
+    "authors": [
+		"Vovchik"
+	],
+    "targetType": "executable",
+    "name": "gravity",
+    "targetName": "gravity",
+    "sourcePaths": [ "." ],
+    "importPaths": [ "." ],
+    "mainSourceFile": "main.d",
+
+    "dependencies": 
+    {
+        "batch-engine": "~master",
+    }
+}

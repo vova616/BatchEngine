@@ -259,8 +259,8 @@ void main(string[] args) {
 void run() {
 	Core.Start();
 
-	Font t = new Font("./../../public/arial.ttf\0", 32, Font.ASCII);
-	ballTexture = new Texture("./../../public/sprite.png\0");
+	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
+	ballTexture = new Texture("./public/sprite.png\0");
 	//ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
 	Core.AddSystem(new GravitySystem());

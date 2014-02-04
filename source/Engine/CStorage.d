@@ -127,6 +127,7 @@ class StorageImpl(T) : ComponentStorage {
 	}	
 
 	package static __gshared Tp[] storage; 
+	package static __gshared size_t totalIndex = 0;
 	package static __gshared size_t activeIndex = 0;
 	package static __gshared EPair[Tp] map;
 
@@ -154,8 +155,16 @@ class StorageImpl(T) : ComponentStorage {
 	};	
 
 	public static void Bind(Tp component, Entity entity) {
-		storage ~= component;
-		map[component] = EPair(entity,storage.length-1,false);
+		if (totalIndex >= storage.length) {
+			if (storage.length == 0) {
+				storage.length = 8;
+			} else {
+				storage.length *= 2;
+			}
+		}
+		storage[totalIndex] = component;
+		map[component] = EPair(entity,totalIndex,false);
+		totalIndex++;
 		static if (__traits(compiles, component._entity = entity)) {
 			component._entity = entity;
 		}	
@@ -229,10 +238,10 @@ class StorageImpl(T) : ComponentStorage {
 	public static void Remove(Tp component) {
 		auto epair = map[component];
 		map.remove(component);
-		if (epair.index != storage.length-1) {
+		if (epair.index != totalIndex-1) {
 			auto dstIndex = epair.index;
 			auto srcIndex = activeIndex-1;
-			if (epair.active && activeIndex != storage.length) {
+			if (epair.active && activeIndex != totalIndex) {
 				//Replace with last active	
 				if (dstIndex != srcIndex) {
 					auto component2 = storage[srcIndex];
@@ -243,7 +252,7 @@ class StorageImpl(T) : ComponentStorage {
 					dstIndex = srcIndex;
 				}			
 			}	
-			srcIndex = storage.length-1;
+			srcIndex = totalIndex-1;
 			//Replace with the last element
 			auto component2 = storage[srcIndex];
 			auto epair2 = &map[component2];
@@ -253,7 +262,10 @@ class StorageImpl(T) : ComponentStorage {
 		if (epair.active) {
 			activeIndex--;
 		}
-		storage.length--;
+		totalIndex--;
+		if (totalIndex > 0 && totalIndex == storage.length / 4) {
+			storage.length /= 2;
+		}
 	}
 	
 	public static Tp Clone(Tp component) {

@@ -5,7 +5,7 @@ import Engine.util;
 import std.stdio;
 import std.typetuple;
 import Engine.Entity;
-
+	
 class ComponentStorage {
 	package static __gshared ComponentStorage[TypeInfo] Storages;
 

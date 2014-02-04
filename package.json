@@ -30,13 +30,13 @@
 			"name": "gravity",
 			"targetType": "executable",
 			"sourcePaths" : ["./examples/gravity/"],
-			"targetPath" : "./examples/gravity/",
+			"targetPath" : "./",
 		},
 		{
 			"name": "life",
 			"targetType": "executable",
 			"sourcePaths" : ["./examples/life/"],
-			"targetPath" : "./examples/life/",
+			"targetPath" : "./",
 		},
 	],
 }

@@ -107,7 +107,7 @@ class BoxCollider : Collider {
 		} else {
 			assert(0);
 		}
-		return false;
+		//return false;
 	}
 }
 
@@ -323,8 +323,8 @@ void main(string[] args) {
 void run() {
 	Core.Start();
 
-	Font t = new Font("./../../public/arial.ttf\0", 32, Font.ASCII);
-	ballTexture = new Texture("./../../public/sprite2.png\0");
+	Font t = new Font("./public/arial.ttf\0", 32, Font.ASCII);
+	ballTexture = new Texture("./public/sprite2.png\0");
 	//ballTexture.SetFiltering(GL_LINEAR,GL_LINEAR);
 
 	//Core.AddSystem(new GravitySystem());

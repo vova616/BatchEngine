@@ -118,6 +118,29 @@ class Entity
 			c.storage.Active(c.component);
 		}
 	}
+
+	public bool RemoveComponent(T)(T component) if (!is(T == Component))  {
+		ComponentStorage storage = StorageImpl!(baseType!T).it;
+		auto found = false;	
+		auto left = 0;	
+		for (int i=0;i<components.length;i++) {
+			auto c = components[i];
+			if (c.storage == storage) {
+				if (cast(void*)component == c.component) {
+					components[i] = components[components.length-1];
+					components.length--;
+					storage.Remove(component.component);
+					found = true;
+				} else {
+					left++;
+				}
+			}	
+		}
+		if (found && left == 0) {
+			setComponentBit(storage.bitIndex, false);
+		}		
+		return found;
+	}
 	
 	
 	public bool RemoveComponent()(Component component) {
@@ -145,23 +168,16 @@ class Entity
 
 	public bool RemoveComponents(T)() {
 		auto found = false;
-		auto left = 0;
 		for (int i=0;i<components.length;i++) {
 			auto component = components[i];
 			if (component.Cast!T() !is null) {
-				if (found && component.storage == StorageImpl!(T).it) {
-					left++;
-					continue;
-				}
+				setComponentBit(component.storage.bitIndex, false);
 				components[i] = components[components.length-1];
 				components.length--;	
 				component.storage.Remove(component.component);	
 				found = true;
 			}
 		}	
-		if (found && left == 0) {
-			setComponentBit(StorageImpl!(T)._bitIndex, false);
-		}			
 		return found;
 	}
 }

@@ -235,15 +235,26 @@ class Life  {
 
 					//Calculate circle collision distance
 					auto dp = (cc.transform.position.xy-transform.position.xy);
-					auto d = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - (dp.x*dp.x + dp.y*dp.y);
+					auto d2 = dp.x*dp.x+dp.y*dp.y;
+					//auto intersection = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - d2;
+					auto d = sqrt(d2);
 					auto amount = sqrt(d) * Core.DeltaTime * 5f;
-					
+
+					auto r = cc.radius;
+					auto R = cc2.radius;
+					auto area = r*r*acos((d2+r*r-R*R)/(2*d*r))+R*R*acos((d2+R*R-r*r)/(2*d*R))-(0.5*sqrt((-d+r+R)*(d+r-R)*(d-r+R)*(d+r+R)));
+					area = abs(area) / 2 ;
+					if(area != area) {
+						area = -1;
+					}
+					e.AddEnergy(-area);
+					energy.AddEnergy(area);
 					//move the target circle
-					c.transform.position += vec3(dp.normalized*amount,0);
+					//c.transform.position += vec3(dp.normalized*amount,0);
 
 					//exchange sizes
-					e.AddSize(-amount);
-					energy.AddSize(amount);
+					//e.AddSize(-amount);
+					//energy.AddSize(amount);
 				}
 			}
 		}
@@ -253,47 +264,47 @@ class Life  {
 class Energy  {
 	mixin ComponentBase;
 	float energy;
-	float sizeRatio = 1;
+	float sizeRatio = 1.5f;
+	private float radius;
+	private float size;
 
-	this(float energy, float ratio = 1.5f) {
-		this.energy = energy;
-		this.sizeRatio = ratio;
+	this(float energy) {
+		setEnergy(energy);
 	}
 
 	void Awake() {
 		SetEnergy(energy);
 	}
 
-	void AddSize(float size) {
-		AddEnergy(size / sizeRatio);
-	}
-
-	void SetSize(float size) {
-		SetEnergy(size / sizeRatio);
-	}
-
 	void AddEnergy(float energy) {
 		SetEnergy(this.energy + energy);
 	}
 
-	void SetEnergy(float energy) {
+	float Radius() {
+		return Size() / 2;
+	}
+
+	private void setEnergy(float energy) {
 		this.energy = energy;
 		if (this.energy <= 0) {
 			this.energy = 0;
 			this.entity.Destory();
 		}
-		auto size = Size();
+		radius = sqrt(energy/PI);
+		size = radius*2;
+		if (size < 1) {
+			entity.Destory();
+		}
+	}
+
+	void SetEnergy(float energy) {
+		setEnergy(energy);
 		transform.scale = vec3(size,size,size);
 	}
 
-	void SetSizeRatio(float sizeRatio) {
-		this.sizeRatio = sizeRatio;
-		auto size = Size();
-		transform.scale = vec3(size,size,size);
-	}
 	
 	float Size() {
-		return energy * sizeRatio;
+		return size;
 	}
 }
 
@@ -344,7 +355,7 @@ void run() {
 			ship.AddComponent!(Life)();
 			ship.name = to!string(x) ~ " " ~ to!string(y);
 			ship.transform.position = vec3(x/m,y/m,0);
-			ship.AddComponent!(Energy)(20);
+			ship.AddComponent!(Energy)(20*30);
 			Core.AddEntity(ship);
 		}
 	}
@@ -359,7 +370,7 @@ void run() {
 
 	auto player = new Entity();
 	player.AddComponent!(Sprite)(ballTexture);
-	auto energy = player.AddComponent!(Energy)(60);
+	auto energy = player.AddComponent!(Energy)(60*30);
 	player.AddComponent!(Life)();
 	player.AddComponent!(LifeController)();
 	player.AddComponent!(CircleCollider)();

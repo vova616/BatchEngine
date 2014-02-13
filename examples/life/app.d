@@ -228,7 +228,7 @@ class Life  {
 	void OnCollision(Collider c) {
 		auto e = c.entity.GetComponent!Energy();
 		if (e) {
-			if (energy.Size() > e.Size()) {
+			if (energy.energy > e.energy) {
 				if (e.energy > 0) {
 					auto cc = cast(CircleCollider)c;
 					auto cc2 = cast(CircleCollider)collider;
@@ -236,19 +236,26 @@ class Life  {
 					//Calculate circle collision distance
 					auto dp = (cc.transform.position.xy-transform.position.xy);
 					auto d2 = dp.x*dp.x+dp.y*dp.y;
-					//auto intersection = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - d2;
 					auto d = sqrt(d2);
-					auto amount = sqrt(d) * Core.DeltaTime * 5f;
+					//auto intersection = ((cc.radius+cc2.radius)*(cc.radius+cc2.radius)) - d2;
+					//auto amount = sqrt(intersection) * Core.DeltaTime * 200f;
 
 					auto r = cc.radius;
 					auto R = cc2.radius;
 					auto area = r*r*acos((d2+r*r-R*R)/(2*d*r))+R*R*acos((d2+R*R-r*r)/(2*d*R))-(0.5*sqrt((-d+r+R)*(d+r-R)*(d-r+R)*(d+r+R)));
-					area = abs(area) / 2 ;
+					area = abs(area) / 10;
 					if(area != area) {
-						area = -1;
+						e.AddEnergy(-e.energy);
+						energy.AddEnergy(e.energy);
+					} else {
+						if (area > e.energy) {
+							area = e.energy;
+						}
+						e.AddEnergy(-area);
+						energy.AddEnergy(area);
 					}
-					e.AddEnergy(-area);
-					energy.AddEnergy(area);
+
+
 					//move the target circle
 					//c.transform.position += vec3(dp.normalized*amount,0);
 

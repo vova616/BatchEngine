@@ -85,7 +85,8 @@ class GravityMouse  {
 	}
 
 	void Step(vec3 mpos, float mforce, float delta, recti bounds) {
-		auto dir = (mpos - transform.position);
+		auto pos = transform.position;
+		auto dir = (mpos - pos);
 		auto dis = (dir.x*dir.x)+(dir.y*dir.y);
 		dir.normalize();
 		if (dis > 1000) {
@@ -94,7 +95,6 @@ class GravityMouse  {
 			v += dir * ((m1/1000) * m2 * mforce);
 		}		
 
-		auto pos = transform.position;
 		auto min = bounds.min;
 		auto max = bounds.max;
 
@@ -112,20 +112,28 @@ class GravityMouse  {
 			v.y = -v.y/8;
 			pos.y = max.y;
 		}
-		transform.position = pos;
+		transform.position = pos + v * delta;
 
-		transform.position += v  * delta;
 		auto sprite = entity.sprite;
 		auto v2 = v;
-		if (v2.x < 0) v2.x = -v2.x;
-		if (v2.y < 0) v2.y = -v2.y;
-
+		v2.x = abs(v2.x);
+		v2.y = abs(v2.y);
 		if (sprite !is null) {
 			sprite.color = vec4((v2.y+2*v2.x)/50, v2.x/50,v2.y/60,1);
-		} //else {
-		// transform.rotation.z = atan2(v.x, v.y) * 180f/PI;
-		// transform.scale.x = (v2.x+v2.y)/20 + 5;
-		// transform.scale.y = transform.scale.x;
+		}
+		/*
+		v2 *= 0.005;
+		if (sprite !is null) {
+			sprite.color = vec4(abs(sin(v2.x)), abs(sin(v2.y)),abs(sin(v2.x-v2.y)),1);
+		} 
+		*/
+		/*
+		 else {
+		 transform.rotation.z = atan2(v.x, v.y) * 180f/PI;
+		 transform.scale.x = (v2.x+v2.y)/20 + 5;
+		 transform.scale.y = transform.scale.x;
+		} 
+		*/
 	}
 }
 

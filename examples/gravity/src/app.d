@@ -72,7 +72,7 @@ class GravitySystem : System {
 class GravityMouse  {
 	mixin ComponentBase;
 	vec3 v = vec3(0,0,0);
-	static shared float force = 6.674*10e-6;
+	static float force = 6.674*10e-6;
 
 	enum m1 = 100000;
 	enum m2 = 100;
@@ -113,20 +113,21 @@ class GravityMouse  {
 			pos.y = max.y;
 		}
 		transform.position = pos + v * delta;
-
+			
 		auto sprite = entity.sprite;
 		auto v2 = v;
+		/*
 		v2.x = abs(v2.x);
 		v2.y = abs(v2.y);
 		if (sprite !is null) {
 			sprite.color = vec4((v2.y+2*v2.x)/50, v2.x/50,v2.y/60,1);
 		}
-		/*
-		v2 *= 0.005;
+		*/	
+		v2 *= 0.5;
 		if (sprite !is null) {
-			sprite.color = vec4(abs(sin(v2.x)), abs(sin(v2.y)),abs(sin(v2.x-v2.y)),1);
+			sprite.color = vec4(abs(sin(v2.x)), abs(cos(v2.y)),abs(sin(v2.x-v2.y)),1);
 		} 
-		*/
+
 		/*
 		 else {
 		 transform.rotation.z = atan2(v.x, v.y) * 180f/PI;
@@ -283,7 +284,7 @@ void run() {
 	gravityBall.transform.scale = vec3(4, 4, 1);
 	
 
-	float entities = 100000/3;
+	float entities = 200000;
 	float m = sqrt(entities/(Core.width*Core.height));
 	for (int x=0;x<Core.width*m;x++) {
 		for (int y=0;y<Core.height*m;y++) {

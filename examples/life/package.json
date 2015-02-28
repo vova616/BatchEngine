@@ -10,12 +10,14 @@
     "targetType": "executable",
     "name": "life",
     "targetName": "life",
-    "sourcePaths": [ "." ],
-    "importPaths": [ "." ],
-    "mainSourceFile": "main.d",
+	"targetPath": "./../../",
+    "workingDirectory": "./../../",
 
     "dependencies": 
     {
-        "batch-engine": "~master",
+         "batch-engine": {
+			"version": "~master",
+			"path": "./../../"
+		},
     }
 }

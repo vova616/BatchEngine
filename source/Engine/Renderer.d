@@ -8,7 +8,7 @@ alias void function(Batch batch) Renderer;
 
 Renderer defaultRenderer = &_defaultRenderer;
 
-private static const final void _defaultRenderer(Batch batch) {
+private static final void _defaultRenderer(Batch batch) {
 	auto shader = batch.material.shader;
 	shader.Use();
 

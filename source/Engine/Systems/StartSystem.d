@@ -16,7 +16,8 @@ class StartSystem : System {
 
 
 	override void process() {
-		comps.sort!("a.funcptr > b.funcptr")();
+		if (comps.length > 100)
+			comps.sort!("a.funcptr > b.funcptr")();
 		foreach(c; comps) {
 			c();
 		}

@@ -8,13 +8,14 @@
 		"Vovchik"
 	],
     "targetType": "executable",
-    "name": "gravity",
-    "targetName": "gravity",
-	"targetPath": "./../../",
+    "name": "box2d",
+    "targetName": "box2d",
+    "targetPath": "./../../",
     "workingDirectory": "./../../",
 
-    "dependencies": 
+    "dependencies":
     {
+		"dbox": "~master",
         "batch-engine": {
 			"version": "~master",
 			"path": "./../../"

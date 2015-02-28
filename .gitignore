@@ -219,3 +219,8 @@ pip-log.txt
 *.o
 *.sln
 *.exe_cv
+*.exe
+*.dll
+*.userprefs
+*.selections.json
+*.lib

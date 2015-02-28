@@ -50,10 +50,20 @@ class Font {
 
 	static this() {
 			DerelictFT.missingSymbolCallback( (string symbolName){ 
-				if (symbolName == "FT_Get_PS_Font_Value") 
-					return ShouldThrow.No;
-				else
-					return ShouldThrow.Yes;
+				switch (symbolName) {
+					case "FT_Get_PS_Font_Value":
+					case "FT_Get_CID_Registry_Ordering_Supplement" :
+					case "FT_Get_CID_From_Glyph_Index" :
+					case "FT_Get_CID_Is_Internally_CID_Keyed" :
+					case "FT_Stream_OpenBzip2":
+					case "FT_Gzip_Uncompress":
+					case "FT_Property_Set":
+					case "FT_Property_Get":
+					case "FT_Outline_EmboldenXY":
+						return ShouldThrow.No;
+					default:
+						return ShouldThrow.Yes;
+				}
 			});
 			DerelictFT.load();	
 			if (FT_Init_FreeType(&ftLibrary) != 0)
